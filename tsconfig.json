@@ -10,7 +10,7 @@
     // See also https://aka.ms/tsconfig/module
     "target": "es2020",
     "module": "commonjs",
-    "types": ["node", "jest"],
+    // "types": ["node", "jest", "jsonwebtoken"],
     // For nodejs:
     // "lib": ["esnext"],
     // "types": ["node"],
@@ -30,6 +30,7 @@
       "@/types/*": ["./src/types/*"],
       "@/usecase/*": ["./src/usecase/*"],
       "@/lib/*": ["./src/lib/*"],
+      "@/middleware/*": ["./src/middleware/*"],
       "@/utils/*": ["./src/utils/*"],
     },
 
