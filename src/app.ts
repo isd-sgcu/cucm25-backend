@@ -3,7 +3,7 @@ import express, { Request, Response } from "express"
 import cors from "cors"
 import bodyParser from "body-parser"
 import routerManager from "@/router"
-import { errorHandler } from "./middleware/errorHandler"
+import { errorHandler } from "@/middleware/errorHandler"
 
 const app = express()
 const PORT = 8080
