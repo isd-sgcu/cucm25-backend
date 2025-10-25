@@ -12,3 +12,38 @@ datasource db {
     provider = "postgresql"
     url      = env("DATABASE_URL")
 }
+
+enum RoleType {
+	PARTICIPANT
+	MODERATOR // staff
+	CORETEAM // admin
+
+	@@map("role_type")
+}
+
+enum EducationLevel {
+	M4
+	M5
+	M6
+	Y1
+	Y2
+	Y3
+	Y4
+	GRADUATED
+}
+
+model User {
+	id String @id @map("id") @db.Uuid
+	studentId String @map("student_id")
+    username  String
+    password  String
+	nickname String
+    firstname String
+    lastname  String 
+	role RoleType
+	educationLevel EducationLevel? @map("education_level")
+	school String?
+	isResetUser Boolean @default(false) @map("is_reset_user")
+	updatedAt DateTime @default(now()) @map("updated_at") @db.Timestamptz()
+	createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
+}
