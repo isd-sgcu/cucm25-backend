@@ -36,7 +36,7 @@ export async function getKeycloakToken(body: LoginRequest): Promise<string> {
                     const raw: ApiResponseRaw = JSON.parse(responseText)
                     errorMsg = raw.error || raw.message || errorMsg
                 } catch {
-                    errorMsg = "Reqeust failed"
+                    errorMsg = "Request failed"
                 }
             }
             throw new ApiError(errorMsg, response.status)
