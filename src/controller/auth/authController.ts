@@ -21,7 +21,7 @@ export class AuthController {
             res.cookie("token", token, {
                 maxAge: 3 * 24 * 60 * 60 * 1000,
                 httpOnly: true,
-                secure: process.env.NODE_ENV != "development"
+                secure: process.env.NODE_ENV !== "development",
             })
             res.status(200).json({ token })
         } catch (error) {
