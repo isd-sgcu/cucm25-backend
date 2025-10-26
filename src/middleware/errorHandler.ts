@@ -13,7 +13,7 @@ export function errorHandler(
         })
         return
     }
-    console.error("Error something:", err)
+    console.error("Unexpected error occurred:", err)
     res.status(500).json({
         message: "An unexpected error occurred",
     })
