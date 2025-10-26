@@ -3,7 +3,7 @@ import { ApiError } from "@/types/error/ApiError"
 import { AppError } from "@/types/error/AppError"
 
 const KEYCLOAK_API_BASE_URL =
-    process.env.KEYCLOAK_API_BASE_URL || "localhost:3000/realms/cucm25"
+    process.env.KEYCLOAK_API_BASE_URL || "http://localhost:3000/realms/cucm25"
 
 interface ApiResponseRaw {
     message?: string

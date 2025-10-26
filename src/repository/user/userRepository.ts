@@ -5,7 +5,6 @@ export interface parsedUser {
     id: string
     studentId: string
     username: string
-    password: string
     nickname: string
     firstname: string
     lastname: string
@@ -22,7 +21,6 @@ export class UserRepository {
                     id: user.id,
                     studentId: user.studentId,
                     username: user.username,
-                    password: user.password,
                     nickname: user.nickname,
                     firstname: user.firstname,
                     lastname: user.lastname,

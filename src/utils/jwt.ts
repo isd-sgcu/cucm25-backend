@@ -6,7 +6,7 @@ const EXPIRES_IN = "3d"
 
 export type jwtUser = Pick<User, "id" | "username" | "role">
 
-export interface jwtKeycloakUser {
+export interface KeycloakUser {
     sub: string
     groups: Array<string>
     studentId: string
@@ -25,6 +25,6 @@ export function verifyJwt(token: string): jwtUser {
     return jwt.verify(token, JWT_SECRET) as jwtUser
 }
 
-export function decodeKeycloakJwt(token: string): jwtKeycloakUser {
-    return jwt.decode(token) as jwtKeycloakUser
+export function decodeKeycloakJwt(token: string): KeycloakUser {
+    return jwt.decode(token) as KeycloakUser
 }

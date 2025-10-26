@@ -36,7 +36,6 @@ model User {
 	id String @id @map("id") @db.Uuid
 	studentId String @map("student_id")
     username  String
-    password  String
 	nickname String
     firstname String
     lastname  String 

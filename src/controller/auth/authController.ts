@@ -14,15 +14,14 @@ export class AuthController {
             const keycloakUser = await this.authUsecase.getKeycloakUser(
                 req.body
             )
-            const user = this.authUsecase.parseKeycloakUser(
-                keycloakUser,
-                req.body.password
-            )
+            const user = this.authUsecase.parseKeycloakUser(keycloakUser)
             await this.authUsecase.register(user)
 
             const token = await this.authUsecase.login(user)
             res.cookie("token", token, {
                 maxAge: 3 * 24 * 60 * 60 * 1000,
+                httpOnly: true,
+                secure: process.env.NODE_ENV != "development"
             })
             res.status(200).json({ token })
         } catch (error) {

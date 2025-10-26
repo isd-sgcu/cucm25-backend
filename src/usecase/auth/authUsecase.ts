@@ -2,7 +2,7 @@ import { getKeycloakToken } from "@/lib/api"
 import { parsedUser, UserRepository } from "@/repository/user/userRepository"
 import { LoginRequest } from "@/types/auth/POST"
 import { AppError } from "@/types/error/AppError"
-import { decodeKeycloakJwt, jwtKeycloakUser, signJwt } from "@/utils/jwt"
+import { decodeKeycloakJwt, KeycloakUser, signJwt } from "@/utils/jwt"
 import { RoleType } from "@prisma/client"
 
 export class AuthUsecase {
@@ -29,7 +29,7 @@ export class AuthUsecase {
         })
     }
 
-    async getKeycloakUser(body: LoginRequest): Promise<jwtKeycloakUser> {
+    async getKeycloakUser(body: LoginRequest): Promise<KeycloakUser> {
         this.validateLoginRequest(body)
 
         try {
@@ -49,7 +49,7 @@ export class AuthUsecase {
         }
     }
 
-    parseKeycloakUser(user: jwtKeycloakUser, password: string): parsedUser {
+    parseKeycloakUser(user: KeycloakUser): parsedUser {
         let role: RoleType = RoleType.PARTICIPANT
         if (user.groups.includes("coreTeam")) {
             role = RoleType.CORETEAM
@@ -61,7 +61,6 @@ export class AuthUsecase {
             id: user.sub,
             studentId: user.studentId,
             username: user.preferred_username,
-            password,
             nickname: user.nickName,
             firstname: user.given_name,
             lastname: user.family_name,
