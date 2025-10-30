@@ -1,14 +1,150 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
-    provider = "prisma-client-js"
+  provider = "prisma-client-js"
 }
 
 datasource db {
-    provider = "postgresql"
-    url      = env("DATABASE_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Role {
+  id         Int       @id @default(autoincrement())
+  name       String    @unique @db.VarChar(50)
+  created_at DateTime? @default(now()) @db.Timestamp(6)
+  users      User[]
+
+  @@map("roles")
+}
+
+model User {
+  id                   String           @id @db.VarChar
+  username             String           @unique @db.VarChar
+  email                String           @unique @db.VarChar
+  role_id              Int
+  created_at           DateTime?        @default(now()) @db.Timestamp(6)
+  redemptions          CodeRedemption[]
+  createdCodes         Code[]           @relation("CodeCreator")
+  receivedTransactions Transaction[]    @relation("TransactionRecipient")
+  sentTransactions     Transaction[]    @relation("TransactionSender")
+  answers              UserAnswer[]
+  user_profiles        UserProfile      @relation(fields: [id], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
+  wallets              Wallet           @relation(fields: [id], references: [user_id], onDelete: NoAction, onUpdate: NoAction, map: "users_id_fkey1")
+  role                 Role             @relation(fields: [role_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@map("users")
+}
+
+model UserProfile {
+  user_id               String    @id @db.VarChar
+  public_display_id     String    @unique @db.VarChar
+  first_name            String?   @db.VarChar
+  last_name             String?   @db.VarChar
+  nickname              String?   @db.VarChar
+  academic_year         String?   @db.VarChar
+  education_institution String?   @db.VarChar
+  camp_role             String?   @db.VarChar
+  terms_accepted_at     DateTime? @db.Timestamp(6)
+  updated_at            DateTime? @default(now()) @db.Timestamp(6)
+  users                 User?
+
+  @@map("user_profiles")
+}
+
+model Wallet {
+  user_id              String    @id @db.VarChar
+  coin_balance         Int       @default(0)
+  current_level        Int       @default(1)
+  gift_sends_remaining Int       @default(5)
+  updated_at           DateTime? @db.Timestamp(6)
+  users                User?
+
+  @@index([coin_balance])
+  @@map("wallets")
+}
+
+model Code {
+  id                 Int              @id @default(autoincrement())
+  code_string        String           @unique @db.VarChar(50)
+  target_role        String           @default("junior") @db.VarChar(50)
+  activity_name      String           @db.VarChar(255)
+  reward_coin        Int              @default(0)
+  created_by_user_id String           @db.VarChar
+  expires_at         DateTime?        @db.Timestamp(6)
+  created_at         DateTime?        @default(now()) @db.Timestamp(6)
+  redemptions        CodeRedemption[]
+  creator            User             @relation("CodeCreator", fields: [created_by_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  transactions       Transaction[]
+
+  @@map("codes")
+}
+
+model CodeRedemption {
+  user_id     String    @db.VarChar
+  code_id     Int
+  redeemed_at DateTime? @default(now()) @db.Timestamp(6)
+  code        Code      @relation(fields: [code_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  user        User      @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([user_id, code_id])
+  @@map("code_redemptions")
+}
+
+model Transaction {
+  id                Int       @id @default(autoincrement())
+  sender_user_id    String?   @db.VarChar
+  recipient_user_id String?   @db.VarChar
+  type              String    @db.VarChar(50)
+  coin_amount       Int       @default(0)
+  related_code_id   Int?
+  created_at        DateTime? @default(now()) @db.Timestamp(6)
+  recipient         User?     @relation("TransactionRecipient", fields: [recipient_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  relatedCode       Code?     @relation(fields: [related_code_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  sender            User?     @relation("TransactionSender", fields: [sender_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@map("transactions")
+}
+
+model Question {
+  id                Int              @id @default(autoincrement())
+  question_text     String
+  question_for_role String           @db.VarChar(50)
+  display_order     Int?
+  created_at        DateTime?        @default(now()) @db.Timestamp(6)
+  options           QuestionOption[]
+  answers           UserAnswer[]
+
+  @@map("questions")
+}
+
+model QuestionOption {
+  id          Int          @id @default(autoincrement())
+  question_id Int
+  option_text String       @db.VarChar
+  created_at  DateTime?    @default(now()) @db.Timestamp(6)
+  question    Question     @relation(fields: [question_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  userAnswers UserAnswer[]
+
+  @@map("question_options")
+}
+
+model UserAnswer {
+  user_id            String         @db.VarChar
+  question_id        Int
+  selected_option_id Int
+  answered_at        DateTime?      @default(now()) @db.Timestamp(6)
+  question           Question       @relation(fields: [question_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  selectedOption     QuestionOption @relation(fields: [selected_option_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  user               User           @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([user_id, question_id])
+  @@map("user_answers")
+}
+
+model SystemSetting {
+  setting_key   String    @id @db.VarChar(100)
+  setting_value String?
+  description   String?
+  updated_at    DateTime? @default(now()) @db.Timestamp(6)
+
+  @@map("system_settings")
 }
