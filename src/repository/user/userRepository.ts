@@ -1,22 +1,17 @@
 import { prisma } from "@/lib/prisma"
-import { EducationLevel, RoleType, User } from "@prisma/client"
-
-export interface parsedUser {
-    id: string
-    studentId: string
-    username: string
-    nickname: string
-    firstname: string
-    lastname: string
-    role: RoleType
-    educationLevel?: EducationLevel
-    school?: string
-}
+import type { ParsedUser } from "@/types/user"
+import { User } from "@prisma/client"
 
 export class UserRepository {
-    async create(user: parsedUser): Promise<User> {
+    async create(user: ParsedUser): Promise<void> {
         return await prisma.$transaction(async (tx) => {
-            const newUser = await tx.user.create({
+            await tx.wallet.create({
+                data: {
+                    user_id: user.id,
+                },
+            })
+
+            await tx.user.create({
                 data: {
                     id: user.id,
                     studentId: user.studentId,
@@ -25,17 +20,36 @@ export class UserRepository {
                     firstname: user.firstname,
                     lastname: user.lastname,
                     role: user.role,
-                    educationLevel: user.educationLevel || null,
-                    school: user.school || null,
+                    educationLevel: user.educationLevel,
+                    school: user.school,
                 },
             })
-
-            return newUser
         })
     }
 
+    async getUserById(id: string): Promise<User | null> {
+        const user = await prisma.user.findFirst({
+            where: {
+                id: id,
+            },
+            include: {
+                wallets: {
+                    select: {
+                        coin_balance: true,
+                        current_level: true,
+                        gift_sends_remaining: true,
+                    },
+                },
+            },
+        })
+        if (!user) {    
+            return null
+        }
+        return user
+    }
+
     async findExists(
-        user: Pick<parsedUser, "id" | "username">
+        user: Pick<ParsedUser, "id" | "username">
     ): Promise<boolean> {
         const existingUser = await prisma.user.findFirst({
             where: {

@@ -1,30 +1,18 @@
-import { User } from "@prisma/client"
+import type { AuthUser, KeycloakUser } from "@/types/auth"
 import jwt from "jsonwebtoken"
 
 const JWT_SECRET = process.env.JWT_SECRET || "JWTSECRET"
+const PUBLIC_KEY = `-----BEGIN PUBLIC KEY-----\n${process.env.KEYCLOAK_PUBLIC_KEY}\n-----END PUBLIC KEY-----`
 const EXPIRES_IN = "3d"
 
-export type jwtUser = Pick<User, "id" | "username" | "role">
-
-export interface KeycloakUser {
-    sub: string
-    groups: Array<string>
-    studentId: string
-    nickName: string
-    name: string
-    preferred_username: string
-    given_name: string
-    family_name: string
-}
-
-export function signJwt(user: jwtUser): string {
+export function signJwt(user: AuthUser): string {
     return jwt.sign(user, JWT_SECRET, { expiresIn: EXPIRES_IN })
 }
 
-export function verifyJwt(token: string): jwtUser {
-    return jwt.verify(token, JWT_SECRET) as jwtUser
+export function verifyJwt(token: string): AuthUser {
+    return jwt.verify(token, JWT_SECRET) as AuthUser
 }
 
-export function decodeKeycloakJwt(token: string): KeycloakUser {
-    return jwt.decode(token) as KeycloakUser
+export function verifyKeycloakJwt(token: string): KeycloakUser {
+    return jwt.verify(token, PUBLIC_KEY) as KeycloakUser
 }

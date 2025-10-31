@@ -1,9 +1,13 @@
+import { UserRepository } from "@/repository/user/userRepository"
+import { ParsedUser } from "@/types/user/index"
 import { getKeycloakToken } from "@/lib/api"
-import { parsedUser, UserRepository } from "@/repository/user/userRepository"
-import { LoginRequest } from "@/types/auth/POST"
+import { verifyKeycloakJwt, signJwt } from "@/utils/jwt"
+
+import type { LoginRequest } from "@/types/auth/POST"
 import { AppError } from "@/types/error/AppError"
-import { decodeKeycloakJwt, KeycloakUser, signJwt } from "@/utils/jwt"
-import { RoleType } from "@prisma/client"
+import { EducationLevel, RoleType, User } from "@prisma/client"
+import type { AuthUser, KeycloakUser } from "@/types/auth"
+import { N_MAPPING, P_MAPPING } from "@/constant/educationLevel"
 
 export class AuthUsecase {
     private userRepository: UserRepository
@@ -12,21 +16,22 @@ export class AuthUsecase {
         this.userRepository = userRepository
     }
 
-    async register(user: parsedUser): Promise<void> {
+    // Init user if not exist and login
+    async initAndLogin(user: ParsedUser): Promise<string> {
         const existingUser = await this.userRepository.findExists(user)
         if (!existingUser) {
             await this.userRepository.create(user)
         }
+
+        return signJwt({
+            id: user.id,
+            username: user.username,
+            role: user.role,
+        })
     }
 
-    async login(
-        body: Pick<parsedUser, "id" | "username" | "role">
-    ): Promise<string> {
-        return signJwt({
-            id: body.id,
-            username: body.username,
-            role: body.role,
-        })
+    async getUser(authUser: AuthUser): Promise<User | null> {
+        return await this.userRepository.getUserById(authUser.id)
     }
 
     async getKeycloakUser(body: LoginRequest): Promise<KeycloakUser> {
@@ -34,7 +39,7 @@ export class AuthUsecase {
 
         try {
             const keycloakToken = await getKeycloakToken(body)
-            const keycloakUser = decodeKeycloakJwt(keycloakToken)
+            const keycloakUser = verifyKeycloakJwt(keycloakToken)
 
             return keycloakUser
         } catch (error) {
@@ -49,13 +54,12 @@ export class AuthUsecase {
         }
     }
 
-    parseKeycloakUser(user: KeycloakUser): parsedUser {
-        let role: RoleType = RoleType.PARTICIPANT
-        if (user.groups.includes("coreTeam")) {
-            role = RoleType.CORETEAM
-        } else if (user.groups.includes("staff")) {
-            role = RoleType.MODERATOR
-        }
+    parseKeycloakUser(user: KeycloakUser): ParsedUser {
+        let role = this.getRoleType(user.groups)
+        let educationLevel = this.getEducationLevel(
+            user.preferred_username,
+            user.education_level
+        )
 
         return {
             id: user.sub,
@@ -65,8 +69,8 @@ export class AuthUsecase {
             firstname: user.given_name,
             lastname: user.family_name,
             role,
-            // educationLevel: "?",
-            // school: "?",
+            educationLevel,
+            school: user.school ?? "-",
         }
     }
 
@@ -74,5 +78,38 @@ export class AuthUsecase {
         if (!body.username || !body.password) {
             throw new AppError("Invalid login request", 400)
         }
+    }
+
+    private getRoleType(groups: Array<string> | undefined): RoleType {
+        // undefined from Keycloak
+        if (!groups) {
+            return RoleType.PARTICIPANT
+        }
+
+        if (groups.includes("coreTeam")) {
+            return RoleType.CORETEAM
+        } else if (groups.includes("staff")) {
+            return RoleType.MODERATOR
+        }
+
+        return RoleType.PARTICIPANT
+    }
+
+    private getEducationLevel(
+        username: string,
+        education_level: string | undefined
+    ): EducationLevel {
+        // undefined from Keycloak
+        if (!education_level) {
+            return EducationLevel.GRADUATED
+        }
+
+        if (username.startsWith("n")) {
+            return N_MAPPING[education_level] ?? EducationLevel.GRADUATED
+        } else if (username.startsWith("p")) {
+            return P_MAPPING[education_level] ?? EducationLevel.GRADUATED
+        }
+
+        return EducationLevel.GRADUATED
     }
 }

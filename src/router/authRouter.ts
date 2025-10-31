@@ -1,4 +1,5 @@
 import { AuthController } from "@/controller/auth/authController"
+import { authMiddleware } from "@/middleware/authMiddleware"
 import { UserRepository } from "@/repository/user/userRepository"
 import { AuthUsecase } from "@/usecase/auth/authUsecase"
 import { Router } from "express"
@@ -10,6 +11,7 @@ export default function authRouter() {
     const authController = new AuthController(authUsecase)
 
     router.post("/login", authController.login.bind(authController))
+    router.get("/me", authMiddleware, authController.me.bind(authController))
 
     return router
 }

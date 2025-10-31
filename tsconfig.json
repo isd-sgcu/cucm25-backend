@@ -24,6 +24,7 @@
     // Paths
     "paths": {
       "@/*": ["./src/*"],
+      "@/constant/*": ["./src/constant/*"],
       "@/controller/*": ["./src/controller/*"],
       "@/repository/*": ["./src/repository/*"],
       "@/router/*": ["./src/router/*"],

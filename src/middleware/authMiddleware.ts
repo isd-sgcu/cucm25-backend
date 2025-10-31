@@ -1,9 +1,10 @@
-import { jwtUser, verifyJwt } from "@/utils/jwt"
+import { verifyJwt } from "@/utils/jwt"
 import { NextFunction, Request, Response } from "express"
+import type { AuthUser } from "@/types/auth"
 
 declare module "express" {
     interface Request {
-        user?: jwtUser
+        user?: AuthUser
     }
 }
 
@@ -30,7 +31,7 @@ export function authMiddleware(
         req.user = decoded
         next()
     } catch (error) {
-        console.log("JWT verification error: ", error)
+        console.log("JWT verification error:", error)
         res.status(401).json({ message: "Unauthorized: Invalid token" })
     }
 }

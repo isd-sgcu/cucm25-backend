@@ -1,3 +1,4 @@
+import { AuthenticatedRequest } from "@/types/auth/index"
 import { AppError } from "@/types/error/AppError"
 import { AuthUsecase } from "@/usecase/auth/authUsecase"
 import type { Request, Response } from "express"
@@ -15,9 +16,8 @@ export class AuthController {
                 req.body
             )
             const user = this.authUsecase.parseKeycloakUser(keycloakUser)
-            await this.authUsecase.register(user)
 
-            const token = await this.authUsecase.login(user)
+            const token = await this.authUsecase.initAndLogin(user)
             res.cookie("token", token, {
                 maxAge: 3 * 24 * 60 * 60 * 1000,
                 httpOnly: true,
@@ -32,6 +32,24 @@ export class AuthController {
                 return
             }
             console.error("Login error:", error)
+            res.status(500).json({
+                message: "An unexpected error occurred",
+            })
+        }
+    }
+
+    async me(req: AuthenticatedRequest, res: Response): Promise<void> {
+        try {
+            const user = await this.authUsecase.getUser(req.user!)
+            res.status(200).json({ user })
+        } catch (error) {
+            if (error instanceof AppError) {
+                res.status(error.statusCode).json({
+                    message: error.message,
+                })
+                return
+            }
+            console.error("Get user error:", error)
             res.status(500).json({
                 message: "An unexpected error occurred",
             })

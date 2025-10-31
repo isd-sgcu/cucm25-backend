@@ -1,4 +1,4 @@
-import { KeycloakTokenResponse, LoginRequest } from "@/types/auth/POST"
+import type { KeycloakTokenResponse, LoginRequest } from "@/types/auth/POST"
 import { ApiError } from "@/types/error/ApiError"
 import { AppError } from "@/types/error/AppError"
 
