@@ -43,6 +43,7 @@ export function authMiddleware(
 		}
 
 		try {
+			req.body.user = user;
 			next();
 		} catch (error) {
 			console.log("JWT verification error:", error);
