@@ -69,4 +69,46 @@ export class UserRepository {
 		}
 		return false;
 	}
+
+	/**
+	 * Adds coin balance to user with `id`'s wallet.
+	 * @param {string} id The target user's id.
+	 * @param {number} amount The amount to add. Negative numbers (to represent subtracting) are allowed as well.
+	 */
+	async addCoinBalance(id: string, amount: number) {
+		await prisma.user.update({
+			where: { id: id },
+			data: {
+				wallets: {
+					update: {
+						where: {
+							user_id: id,
+						},
+						data: { coin_balance: { increment: amount } },
+					},
+				},
+			},
+		});
+	}
+
+	/**
+	 * Adds sending quota to user with `id`'s wallet.
+	 * @param {string} id The target user's id.
+	 * @param {number} amount The amount to add. Negative numbers (to represent subtracting) are allowed as well.
+	 */
+	async addSendingQuota(id: string, amount: number) {
+		await prisma.user.update({
+			where: { id: id },
+			data: {
+				wallets: {
+					update: {
+						where: {
+							user_id: id,
+						},
+						data: { gift_sends_remaining: { increment: amount } },
+					},
+				},
+			},
+		});
+	}
 }
