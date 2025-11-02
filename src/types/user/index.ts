@@ -21,5 +21,6 @@ export interface ParsedUser {
 		coin_balance: number;
 		current_level: number;
 		gift_sends_remaining: number;
+		last_gift_sent_at: Date;
 	};
 }
