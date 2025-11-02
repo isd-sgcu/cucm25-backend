@@ -71,7 +71,7 @@ export class GiftUsecase {
 		sender: ParsedUser,
 		recipientId: string,
 		amount: number
-	): Promise<{ statusCode: number; message: string }> {
+	): Promise<{ statusCode: number; message: string; newAmount: number }> {
 		let ok = true;
 
 		const userRepository = new UserRepository();
@@ -109,6 +109,7 @@ export class GiftUsecase {
 			return {
 				statusCode: 400,
 				message: "Unable to send gift.",
+				newAmount: sender.wallets.coin_balance - amount,
 			};
 		}
 
@@ -133,6 +134,7 @@ export class GiftUsecase {
 		return {
 			statusCode: 200,
 			message: "Gift successfully sent!",
+			newAmount: sender.wallets.coin_balance - amount,
 		};
 	}
 }

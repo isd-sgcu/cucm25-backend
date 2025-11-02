@@ -35,12 +35,16 @@ export class GiftController {
 			const recipient = _req.body.recipient;
 			const amount = parseInt(_req.body.amount);
 
-			const result = await this.giftUsecase.sendGift(
-				sender,
-				recipient,
-				amount
-			);
-			res.status(result.statusCode).json({ message: result.message });
+			const result: {
+				statusCode: number;
+				message: string;
+				newAmount: number;
+			} = await this.giftUsecase.sendGift(sender, recipient, amount);
+
+			res.status(result.statusCode).json({
+				message: result.message,
+				newAmount: result.newAmount,
+			});
 		} catch (error) {
 			if (error instanceof AppError) {
 				res.status(error.statusCode).json({
