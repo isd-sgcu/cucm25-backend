@@ -8,6 +8,7 @@ const KEYCLOAK_API_BASE_URL =
 interface ApiResponseRaw {
     message?: string
     error?: string
+    error_description?: string
 }
 
 export async function getKeycloakToken(body: LoginRequest): Promise<string> {
@@ -30,14 +31,16 @@ export async function getKeycloakToken(body: LoginRequest): Promise<string> {
         })
         if (!response.ok) {
             let errorMsg = "Request failed"
-            if (response.body) {
-                try {
-                    const responseText = await response.text()
-                    const raw: ApiResponseRaw = JSON.parse(responseText)
-                    errorMsg = raw.error || raw.message || errorMsg
-                } catch {
-                    errorMsg = "Request failed"
-                }
+
+            try {
+                const responseText = await response.text()
+                const raw: ApiResponseRaw = JSON.parse(responseText)
+                errorMsg =
+                    raw.error && raw.error_description
+                        ? `${raw.error}: ${raw.error_description}`
+                        : raw.error || raw.message || errorMsg
+            } catch {
+                errorMsg = "Request failed"
             }
             throw new ApiError(errorMsg, response.status)
         }

@@ -5,6 +5,7 @@ export const P_MAPPING: Record<string, EducationLevel> = {
     "2": EducationLevel.Y2,
     "3": EducationLevel.Y3,
     "4": EducationLevel.Y4,
+    บัณฑิต: EducationLevel.GRADUATED,
 }
 
 export const N_MAPPING: Record<string, EducationLevel> = {

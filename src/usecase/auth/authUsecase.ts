@@ -56,10 +56,7 @@ export class AuthUsecase {
 
     parseKeycloakUser(user: KeycloakUser): ParsedUser {
         let role = this.getRoleType(user.groups)
-        let educationLevel = this.getEducationLevel(
-            user.preferred_username,
-            user.education_level
-        )
+        let educationLevel = this.getEducationLevel(role, user.education_level)
 
         return {
             id: user.sub,
@@ -81,35 +78,37 @@ export class AuthUsecase {
     }
 
     private getRoleType(groups: Array<string> | undefined): RoleType {
-        // undefined from Keycloak
-        if (!groups) {
+        // undefined or empty array from Keycloak
+        if (!groups || groups.length === 0) {
             return RoleType.PARTICIPANT
         }
 
-        if (groups.includes("coreTeam")) {
-            return RoleType.CORETEAM
-        } else if (groups.includes("staff")) {
+        if (groups.includes("cucmAdmin")) {
+            return RoleType.ADMIN
+        }
+        if (groups.includes("cucmModerator")) {
             return RoleType.MODERATOR
+        }
+        if (groups.includes("staff")) {
+            return RoleType.STAFF
         }
 
         return RoleType.PARTICIPANT
     }
 
     private getEducationLevel(
-        username: string,
+        role: RoleType,
         education_level: string | undefined
     ): EducationLevel {
-        // undefined from Keycloak
+        // undefined or empty string from Keycloak
         if (!education_level) {
             return EducationLevel.GRADUATED
         }
 
-        if (username.startsWith("n")) {
+        if (role === RoleType.PARTICIPANT) {
             return N_MAPPING[education_level] ?? EducationLevel.GRADUATED
-        } else if (username.startsWith("p")) {
-            return P_MAPPING[education_level] ?? EducationLevel.GRADUATED
         }
 
-        return EducationLevel.GRADUATED
+        return P_MAPPING[education_level] ?? EducationLevel.GRADUATED
     }
 }
