@@ -46,6 +46,7 @@ export class UserRepository {
 						coin_balance: true,
 						current_level: true,
 						gift_sends_remaining: true,
+						last_gift_sent_at: true,
 					},
 				},
 			},
@@ -106,6 +107,28 @@ export class UserRepository {
 							user_id: id,
 						},
 						data: { gift_sends_remaining: { increment: amount } },
+					},
+				},
+			},
+		});
+	}
+
+	/**
+	 * Sets the last send time for a user's wallet.
+	 * Used for enforcing the hourly limit of gift sending.
+	 * @param {string} id The target user's id.
+	 * @param {Date} timestamp The timestamp to set as the last send time.
+	 */
+	async setLastSendTime(id: string, timestamp: Date) {
+		await prisma.user.update({
+			where: { id: id },
+			data: {
+				wallets: {
+					update: {
+						where: {
+							user_id: id,
+						},
+						data: { last_gift_sent_at: timestamp },
 					},
 				},
 			},
