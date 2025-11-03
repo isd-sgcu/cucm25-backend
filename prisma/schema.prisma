@@ -12,3 +12,57 @@ datasource db {
     provider = "postgresql"
     url      = env("DATABASE_URL")
 }
+
+enum RoleType {
+    PARTICIPANT
+    STAFF
+    MODERATOR
+    ADMIN
+
+    @@map("role_type")
+}
+
+enum EducationLevel {
+    M4
+    M5
+    M6
+    Y1
+    Y2
+    Y3
+    Y4
+    GRADUATED
+}
+
+model User {
+    id              String         @id @db.Uuid
+    studentId       String         @map("student_id")
+    username        String
+    nickname        String
+    firstname       String
+    lastname        String
+    role            RoleType
+    educationLevel  EducationLevel @map("education_level")
+    school          String
+    isResetUser     Boolean        @default(false) @map("is_reset_user")
+    termsAcceptedAt DateTime?      @map("terms_accepted_at") @db.Timestamptz()
+    wallets         Wallet         @relation(fields: [id], references: [user_id], onDelete: NoAction, onUpdate: NoAction, map: "users_id_fkey1")
+
+    updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
+    createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+    @@unique([id])
+    @@index([id])
+    @@map("users")
+}
+
+model Wallet {
+    user_id              String   @id @db.Uuid
+    coin_balance         Int      @default(0)
+    current_level        Int      @default(1)
+    gift_sends_remaining Int      @default(5)
+    updated_at           DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
+    users                User?
+
+    @@index([coin_balance])
+    @@map("wallets")
+}
