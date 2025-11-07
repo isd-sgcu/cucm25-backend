@@ -1,20 +1,23 @@
 import { GiftRepository } from "@/repository/gift/giftRepository";
 import { UserRepository } from "@/repository/mock/userRepository";
+import { AuthUser } from "@/types/auth";
 import { ParsedUser } from "@/types/user";
 
 const SENDING_QUOTA = 7;
 const RESET_TIME = 1000 * 60 * 60;
 
-async function checkRecipientExistence(id: string | null) {
-	if (!id) {
+async function checkRecipientExistence(username: string | null) {
+	if (!username) {
 		console.warn("Recipient doesn't actually exist.");
 		return false;
 	}
 
 	const userRepository = new UserRepository();
-	const recipient = userRepository.getUserById(id);
+	// TODO: Unnecessary extra call just to check for existence.
+	const recipient = userRepository.getUserByUsername(username);
 
 	if (!recipient) {
+		console.warn("Recipient doesn't actually exist.");
 		return false;
 	}
 
@@ -82,8 +85,8 @@ export class GiftUsecase {
 
 	// TODO: Separate checking logic from actual sending logic?
 	async sendGift(
-		sender: ParsedUser,
-		recipientId: string,
+		sender: AuthUser,
+		recipientUsername: string,
 		amount: number
 	): Promise<{ statusCode: number; message: string; newAmount: number }> {
 		let ok = true;
@@ -99,7 +102,7 @@ export class GiftUsecase {
 			};
 		}
 
-		if (checkSenderResetTime(sender)) {
+		if (checkSenderResetTime(senderData)) {
 			const remaining = senderData.wallets.gift_sends_remaining;
 
 			// in the database
@@ -117,15 +120,15 @@ export class GiftUsecase {
 			);
 		}
 
-		if (!checkRecipientExistence(recipientId)) {
+		if (!checkRecipientExistence(recipientUsername)) {
 			ok = false;
 		}
 
-		if (!checkSenderLimit(sender)) {
+		if (!checkSenderLimit(senderData)) {
 			ok = false;
 		}
 
-		if (!checkSenderBalance(sender, amount ?? 0)) {
+		if (!checkSenderBalance(senderData, amount ?? 0)) {
 			ok = false;
 		}
 
@@ -136,6 +139,10 @@ export class GiftUsecase {
 				newAmount: senderData.wallets.coin_balance - amount,
 			};
 		}
+
+		const recipient = (await userRepository.getUserByUsername(
+			recipientUsername
+		)) as ParsedUser;
 
 		/**
 		 * Actually send the gift:
@@ -150,9 +157,9 @@ export class GiftUsecase {
 		await userRepository.addCoinBalance(senderData.id, amount * -1);
 		await userRepository.addSendingQuota(senderData.id, -1);
 		await userRepository.setLastSendTime(senderData.id, timestamp);
-		await userRepository.addCoinBalance(recipientId, amount);
+		await userRepository.addCoinBalance(recipient.id, amount);
 		console.log(
-			`${senderData.id} successfully sent ${amount} money to ${recipientId} at ${timestamp.toISOString()}.`
+			`${senderData.username} successfully sent ${amount} money to ${recipient.username} at ${timestamp.toISOString()}.`
 		);
 
 		return {
