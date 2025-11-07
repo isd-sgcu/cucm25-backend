@@ -1,3 +1,4 @@
+import { AuthUser } from "@/types/auth";
 import { AppError } from "@/types/error/AppError";
 import { GiftUsecase } from "@/usecase/gift/giftUsecase";
 import type { Request, Response } from "express";
@@ -30,8 +31,7 @@ export class GiftController {
 	async sendGift(_req: Request, res: Response): Promise<void> {
 		try {
 			// FIXME: Add data validation
-			const sender = _req.body.user;
-			// TODO: Recipient is currently user ID, make it something more easier for the end users.
+			const sender = _req.user;
 			const recipient = _req.body.recipient;
 			const amount = parseInt(_req.body.amount);
 
@@ -39,7 +39,11 @@ export class GiftController {
 				statusCode: number;
 				message: string;
 				newAmount: number;
-			} = await this.giftUsecase.sendGift(sender, recipient, amount);
+			} = await this.giftUsecase.sendGift(
+				sender as AuthUser,
+				recipient,
+				amount
+			);
 
 			res.status(result.statusCode).json({
 				message: result.message,
