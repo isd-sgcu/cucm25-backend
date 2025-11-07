@@ -15,8 +15,9 @@ datasource db {
 
 enum RoleType {
     PARTICIPANT
-    MODERATOR // staff
-    CORETEAM // admin
+    STAFF
+    MODERATOR
+    ADMIN
 
     @@map("role_type")
 }
