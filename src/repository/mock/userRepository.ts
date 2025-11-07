@@ -57,6 +57,33 @@ export class UserRepository {
 		return user;
 	}
 
+	/**
+	 * Gets a user by username (at the moment its the format of `{n,p}[0-9][0-9][0-9]`)
+	 * @param {string} username
+	 * @returns The user if one with `username` exists, `null` otherwise.
+	 */
+	async getUserByUsername(username: string): Promise<ParsedUser | null> {
+		const user = await prisma.user.findFirst({
+			where: {
+				username: username,
+			},
+			include: {
+				wallets: {
+					select: {
+						coin_balance: true,
+						current_level: true,
+						gift_sends_remaining: true,
+						last_gift_sent_at: true,
+					},
+				},
+			},
+		});
+		if (!user) {
+			return null;
+		}
+		return user;
+	}
+
 	async findExists(
 		user: Pick<ParsedUser, "id" | "username">
 	): Promise<boolean> {
