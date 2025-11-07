@@ -1,6 +1,6 @@
 import { Router } from "express";
 // import mockRouter from "@/router/mock";
-import giftRouter from "./gift";
+import giftRouter from "@/router/giftRouter";
 import authRouter from "@/router/authRouter";
 
 export default function routerManager() {
