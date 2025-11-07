@@ -10,4 +10,10 @@ export interface ParsedUser {
 	role: RoleType;
 	educationLevel: EducationLevel;
 	school: string;
+	wallets?: {
+		coin_balance: number;
+		current_level: number;
+		gift_sends_remaining: number;
+		last_gift_sent_at: Date;
+	};
 }
