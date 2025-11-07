@@ -22,19 +22,29 @@ async function checkRecipientExistence(id: string | null) {
 }
 
 /* This function assumes sender already exists (this should've already been checked elsewhere.) */
+/* This function assumes sender's wallet already exists (this should've already been checked elsewhere.) */
 function checkSenderLimit(sender: ParsedUser) {
+	if (!sender.wallets) {
+		return false;
+	}
+
 	// TODO: Add timestamp checking to see if limit should be reset,
 	// e.g. if the last time gift sent > 3600 then let it pass even if remaining is 0.
 
-	if (sender.wallets.gift_sends_remaining <= 0) {
+	if (sender?.wallets.gift_sends_remaining <= 0) {
 		console.warn("Sender ran out of gift sends in the time period.");
 		return false;
 	}
 	return true;
 }
 
+/* This function assumes sender's wallet already exists (this should've already been checked elsewhere.) */
 function checkSenderBalance(sender: ParsedUser, amount: number) {
-	if (sender.wallets.coin_balance < amount) {
+	if (!sender.wallets) {
+		return false;
+	}
+
+	if (sender?.wallets.coin_balance < amount) {
 		console.warn("Sender doesn't have enough currency.");
 		return false;
 	}
@@ -42,7 +52,11 @@ function checkSenderBalance(sender: ParsedUser, amount: number) {
 }
 
 function checkSenderResetTime(sender: ParsedUser) {
-	const resetTime = new Date(sender.wallets.last_gift_sent_at);
+	if (!sender.wallets) {
+		return false;
+	}
+
+	const resetTime = new Date(sender?.wallets.last_gift_sent_at);
 
 	if (
 		resetTime.getMilliseconds() !== 0 ||
@@ -75,21 +89,31 @@ export class GiftUsecase {
 		let ok = true;
 
 		const userRepository = new UserRepository();
+		const senderData = await userRepository.getUserById(sender.id);
+
+		if (!senderData?.wallets) {
+			return {
+				statusCode: 400,
+				message: "Sender's wallet doesn't exist???",
+				newAmount: 0,
+			};
+		}
 
 		if (checkSenderResetTime(sender)) {
-			const remaining = sender.wallets.gift_sends_remaining;
+			const remaining = senderData.wallets.gift_sends_remaining;
 
 			// in the database
 			await userRepository.addSendingQuota(
-				sender.id,
+				senderData.id,
 				SENDING_QUOTA - remaining
 			);
 
 			// in the current object
-			sender.wallets.gift_sends_remaining += SENDING_QUOTA - remaining;
+			senderData.wallets.gift_sends_remaining +=
+				SENDING_QUOTA - remaining;
 
 			console.log(
-				`Reset ${sender.id}'s sending quota to ${SENDING_QUOTA}, as it has been more than ${RESET_TIME} milliseconds after the last gift sending.`
+				`Reset ${senderData.id}'s sending quota to ${SENDING_QUOTA}, as it has been more than ${RESET_TIME} milliseconds after the last gift sending.`
 			);
 		}
 
@@ -109,7 +133,7 @@ export class GiftUsecase {
 			return {
 				statusCode: 400,
 				message: "Unable to send gift.",
-				newAmount: sender.wallets.coin_balance - amount,
+				newAmount: senderData.wallets.coin_balance - amount,
 			};
 		}
 
@@ -123,18 +147,18 @@ export class GiftUsecase {
 		 */
 
 		const timestamp = new Date();
-		await userRepository.addCoinBalance(sender.id, amount * -1);
-		await userRepository.addSendingQuota(sender.id, -1);
-		await userRepository.setLastSendTime(sender.id, timestamp);
+		await userRepository.addCoinBalance(senderData.id, amount * -1);
+		await userRepository.addSendingQuota(senderData.id, -1);
+		await userRepository.setLastSendTime(senderData.id, timestamp);
 		await userRepository.addCoinBalance(recipientId, amount);
 		console.log(
-			`${sender.id} successfully sent ${amount} money to ${recipientId} at ${timestamp.toISOString()}.`
+			`${senderData.id} successfully sent ${amount} money to ${recipientId} at ${timestamp.toISOString()}.`
 		);
 
 		return {
 			statusCode: 200,
 			message: "Gift successfully sent!",
-			newAmount: sender.wallets.coin_balance - amount,
+			newAmount: senderData.wallets.coin_balance - amount,
 		};
 	}
 }
