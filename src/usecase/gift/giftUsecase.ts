@@ -137,7 +137,7 @@ export class GiftUsecase {
 			return {
 				statusCode: 400,
 				message: "Unable to send gift.",
-				newAmount: senderData.wallets.coin_balance - amount,
+				newAmount: senderData.wallets.coin_balance,
 			};
 		}
 
