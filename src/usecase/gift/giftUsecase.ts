@@ -151,7 +151,7 @@ export class GiftUsecase {
 		 * - Deduct 1 from the sender's quota
 		 * - Set the timestamp of the last gift send to this time.
 		 * - Add `amount` currency to `recipient`'s wallet.
-		 * - Log the transaction.
+		 * - Log the transaction. // TODO: the `timestamp` variable and the timestamp in the record may be different.
 		 */
 
 		const timestamp = new Date();
