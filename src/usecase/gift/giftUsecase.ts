@@ -1,5 +1,6 @@
 import { GiftRepository } from "@/repository/gift/giftRepository";
 import { UserRepository } from "@/repository/mock/userRepository";
+import { TransactionRepository } from "@/repository/transaction/transactionRepository";
 import { AuthUser } from "@/types/auth";
 import { ParsedUser } from "@/types/user";
 
@@ -150,7 +151,7 @@ export class GiftUsecase {
 		 * - Deduct 1 from the sender's quota
 		 * - Set the timestamp of the last gift send to this time.
 		 * - Add `amount` currency to `recipient`'s wallet.
-		 * - TODO: Properly log the transaction (currently it's just a `console.log`) (possibly in `giftRepository.ts`?)
+		 * - Log the transaction.
 		 */
 
 		const timestamp = new Date();
@@ -161,6 +162,9 @@ export class GiftUsecase {
 		console.log(
 			`${senderData.username} successfully sent ${amount} money to ${recipient.username} at ${timestamp.toISOString()}.`
 		);
+
+		const transactionRepository = new TransactionRepository();
+		await transactionRepository.create(senderData, recipient, amount);
 
 		return {
 			statusCode: 200,
