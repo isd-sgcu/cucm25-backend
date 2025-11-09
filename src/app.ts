@@ -3,6 +3,7 @@ import express, { Request, Response } from "express"
 import cors from "cors"
 import bodyParser from "body-parser"
 import routerManager from "@/router"
+import { errorHandler } from "@/middleware/errorHandler"
 import { checkSystemAvailability } from "@/middleware/systemCheck"
 
 const app = express()
@@ -29,6 +30,8 @@ app.get("/health", (_req: Request, res: Response) => {
         uptime: process.uptime(),
     })
 })
+
+app.use(errorHandler)
 
 app.listen(PORT, () => {
     console.log(`Listening on port ${PORT}`)
