@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma"
-import type { ParsedUser } from "@/types/user"
+import type { MappedOnboarding, ParsedUser } from "@/types/user"
 import { User } from "@prisma/client"
 
 export class UserRepository {
@@ -42,7 +42,7 @@ export class UserRepository {
                 },
             },
         })
-        if (!user) {    
+        if (!user) {
             return null
         }
         return user
@@ -60,5 +60,30 @@ export class UserRepository {
             return true
         }
         return false
+    }
+
+    async createUserAnswer(id: string, body: MappedOnboarding): Promise<void> {
+        const timestamp = new Date()
+
+        await prisma.$transaction(async (tx) => {
+            await tx.userAnswer.createMany({
+                data: body.map((answer) => ({
+                    user_id: id,
+                    question_id: answer.questionId,
+                    selected_option_id: answer.optionId,
+                    answered_at: timestamp,
+                })),
+            })
+
+            await tx.user.update({
+                where: {
+                    id: id,
+                },
+                data: {
+                    termsAcceptedAt: timestamp,
+                    isResetUser: false,
+                },
+            })
+        })
     }
 }
