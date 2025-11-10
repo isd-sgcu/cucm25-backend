@@ -46,12 +46,13 @@ model User {
     isResetUser     Boolean        @default(false) @map("is_reset_user")
     termsAcceptedAt DateTime?      @map("terms_accepted_at") @db.Timestamptz()
     wallets         Wallet         @relation(fields: [id], references: [user_id], onDelete: NoAction, onUpdate: NoAction, map: "users_id_fkey1")
+    answers         UserAnswer[]
 
     updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
     createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
 
     @@unique([id])
-    @@index([id])
+    @@index([username])
     @@map("users")
 }
 
@@ -65,4 +66,40 @@ model Wallet {
 
     @@index([coin_balance])
     @@map("wallets")
+}
+
+model Question {
+    id            Int              @id
+    title         String
+    role          RoleType
+    created_at    DateTime         @default(now()) @db.Timestamptz()
+    options       QuestionOption[]
+    answers       UserAnswer[]
+
+    @@map("questions")
+}
+
+model QuestionOption {
+    id          Int          @id @default(autoincrement())
+    question_id Int
+    option_text String       
+    created_at    DateTime   @default(now()) @db.Timestamptz()
+    question    Question     @relation(fields: [question_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+    userAnswers UserAnswer[]
+
+    @@index([question_id, option_text])
+    @@map("question_options")
+}
+
+model UserAnswer {
+    user_id            String         @db.Uuid
+    question_id        Int
+    selected_option_id Int
+    answered_at        DateTime       @default(now()) @db.Timestamptz()
+    question           Question       @relation(fields: [question_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+    selectedOption     QuestionOption @relation(fields: [selected_option_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+    user               User           @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+    @@id([user_id, question_id])
+    @@map("user_answers")
 }
