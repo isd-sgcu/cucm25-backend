@@ -33,6 +33,14 @@ enum EducationLevel {
     GRADUATED
 }
 
+enum TransactionType {
+    GIFT
+    CODE_REDEMPTION
+    CENTRAL_PAYMENT
+    ADMIN_GRANT
+    PEER_TRANSFER
+}
+
 model User {
     id              String         @id @db.Uuid
     studentId       String         @map("student_id")
@@ -50,6 +58,10 @@ model User {
 
     updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
     createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+    senderTransactions Transaction[]   @relation("SenderTransactions")     // Represents transactions where THIS user is the SENDER
+    recipientTransactions Transaction[] @relation("RecipientTransactions")  // Represents transactions where THIS user is the RECIPIENT
+
 
     @@unique([id])
     @@index([username])
