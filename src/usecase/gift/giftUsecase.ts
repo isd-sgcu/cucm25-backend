@@ -104,7 +104,10 @@ export class GiftUsecase {
 			};
 		}
 
-		if (typeof amount !== "string" || !/^-?[0-9]+$/.test(amount)) {
+		if (
+			typeof amount !== "number" &&
+			(typeof amount !== "string" || !/^-?[0-9]+$/.test(amount))
+		) {
 			console.warn(
 				`Unable to send gift for ${sender.username}: Invalid amount provided.`
 			);
@@ -134,7 +137,7 @@ export class GiftUsecase {
 			);
 		}
 
-		const numberAmount = parseInt(amount);
+		const numberAmount = parseInt(amount.toString());
 
 		if (numberAmount < 0) {
 			console.warn(
