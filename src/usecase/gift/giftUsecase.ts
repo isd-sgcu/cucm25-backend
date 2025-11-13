@@ -122,18 +122,30 @@ export class GiftUsecase {
 		}
 
 		if (sender.username === recipientUsername) {
+			console.warn(
+				`Unable to send gift for ${sender.username}: Sender and recipient are the same person.`
+			);
 			ok = false;
 		}
 
 		if (!checkRecipientExistence(recipientUsername)) {
+			console.warn(
+				`Unable to send gift for ${sender.username}: Recipient ${recipientUsername} doesn't exist.`
+			);
 			ok = false;
 		}
 
 		if (!checkSenderLimit(senderData)) {
+			console.warn(
+				`Unable to send gift for ${sender.username}: Sender ran out of gift quotas.`
+			);
 			ok = false;
 		}
 
 		if (!checkSenderBalance(senderData, amount ?? 0)) {
+			console.warn(
+				`Unable to send gift for ${sender.username}: Sender doesn't have enough currency.`
+			);
 			ok = false;
 		}
 
