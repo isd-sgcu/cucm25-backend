@@ -159,6 +159,7 @@ export class GiftUsecase {
 		await userRepository.addSendingQuota(senderData.id, -1);
 		await userRepository.setLastSendTime(senderData.id, timestamp);
 		await userRepository.addCoinBalance(recipient.id, amount);
+		await userRepository.addTotalCoinAmount(recipient.id, amount);
 		console.log(
 			`${senderData.username} successfully sent ${amount} money to ${recipient.username} at ${timestamp.toISOString()}.`
 		);
