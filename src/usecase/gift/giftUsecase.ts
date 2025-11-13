@@ -6,6 +6,7 @@ import { ParsedUser } from "@/types/user";
 
 const SENDING_QUOTA = 7;
 const RESET_TIME = 1000 * 60 * 60;
+const MAXIMUM_AMOUNT_PER_SEND = 1000000;
 
 async function checkRecipientExistence(username: string | null) {
 	if (!username) {
@@ -88,7 +89,7 @@ export class GiftUsecase {
 	async sendGift(
 		sender: AuthUser,
 		recipientUsername: string,
-		amount: number
+		amount: unknown
 	): Promise<{ statusCode: number; message: string; newAmount: number }> {
 		let ok = true;
 
@@ -100,6 +101,18 @@ export class GiftUsecase {
 				statusCode: 400,
 				message: "Sender's wallet doesn't exist???",
 				newAmount: 0,
+			};
+		}
+
+		if (typeof amount !== "string" || !/^-?[0-9]+$/.test(amount)) {
+			console.warn(
+				`Unable to send gift for ${sender.username}: Invalid amount provided.`
+			);
+			ok = false;
+			return {
+				statusCode: 400,
+				message: "Unable to send gift.",
+				newAmount: senderData.wallets.coin_balance,
 			};
 		}
 
@@ -119,6 +132,22 @@ export class GiftUsecase {
 			console.log(
 				`Reset ${senderData.id}'s sending quota to ${SENDING_QUOTA}, as it has been more than ${RESET_TIME} milliseconds after the last gift sending.`
 			);
+		}
+
+		const numberAmount = parseInt(amount);
+
+		if (numberAmount < 0) {
+			console.warn(
+				`Unable to send gift for ${sender.username}: Negative amount provided.`
+			);
+			ok = false;
+		}
+
+		if (numberAmount > MAXIMUM_AMOUNT_PER_SEND) {
+			console.warn(
+				`Unable to send gift for ${sender.username}: Amount provided exceeds maximum allowed.`
+			);
+			ok = false;
 		}
 
 		if (sender.username === recipientUsername) {
@@ -142,7 +171,7 @@ export class GiftUsecase {
 			ok = false;
 		}
 
-		if (!checkSenderBalance(senderData, amount ?? 0)) {
+		if (!checkSenderBalance(senderData, numberAmount ?? 0)) {
 			console.warn(
 				`Unable to send gift for ${sender.username}: Sender doesn't have enough currency.`
 			);
@@ -171,22 +200,22 @@ export class GiftUsecase {
 		 */
 
 		const timestamp = new Date();
-		await userRepository.addCoinBalance(senderData.id, amount * -1);
+		await userRepository.addCoinBalance(senderData.id, numberAmount * -1);
 		await userRepository.addSendingQuota(senderData.id, -1);
 		await userRepository.setLastSendTime(senderData.id, timestamp);
-		await userRepository.addCoinBalance(recipient.id, amount);
-		await userRepository.addTotalCoinAmount(recipient.id, amount);
+		await userRepository.addCoinBalance(recipient.id, numberAmount);
+		await userRepository.addTotalCoinAmount(recipient.id, numberAmount);
 		console.log(
-			`${senderData.username} successfully sent ${amount} money to ${recipient.username} at ${timestamp.toISOString()}.`
+			`${senderData.username} successfully sent ${numberAmount} money to ${recipient.username} at ${timestamp.toISOString()}.`
 		);
 
 		const transactionRepository = new TransactionRepository();
-		await transactionRepository.create(senderData, recipient, amount);
+		await transactionRepository.create(senderData, recipient, numberAmount);
 
 		return {
 			statusCode: 200,
 			message: "Gift successfully sent!",
-			newAmount: senderData.wallets.coin_balance - amount,
+			newAmount: senderData.wallets.coin_balance - numberAmount,
 		};
 	}
 }
