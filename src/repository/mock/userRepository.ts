@@ -112,7 +112,32 @@ export class UserRepository {
 						where: {
 							user_id: id,
 						},
-						data: { coin_balance: { increment: amount } },
+						data: {
+							coin_balance: { increment: amount },
+						},
+					},
+				},
+			},
+		});
+	}
+
+	/**
+	 * Adds to the total coin amount to the user with `id`'s wallet
+	 * @param {string} id The target user's id.
+	 * @param {number} amount The amount to add. Negative numbers should not be used unless for exceptional cases.
+	 */
+	async addTotalCoinAmount(id: string, amount: number) {
+		await prisma.user.update({
+			where: { id: id },
+			data: {
+				wallets: {
+					update: {
+						where: {
+							user_id: id,
+						},
+						data: {
+							current_level: { increment: amount },
+						},
 					},
 				},
 			},
