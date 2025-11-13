@@ -33,7 +33,7 @@ export class GiftController {
 			// FIXME: Add data validation
 			const sender = _req.user;
 			const recipient = _req.body.recipient;
-			const amount = parseInt(_req.body.amount);
+			const amount = _req.body.amount;
 
 			const result: {
 				statusCode: number;
