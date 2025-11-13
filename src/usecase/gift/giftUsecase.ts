@@ -121,6 +121,10 @@ export class GiftUsecase {
 			);
 		}
 
+		if (sender.username === recipientUsername) {
+			ok = false;
+		}
+
 		if (!checkRecipientExistence(recipientUsername)) {
 			ok = false;
 		}
