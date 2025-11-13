@@ -27,7 +27,10 @@ export class UserUsecase {
             throw new AppError("User does not exist", 404)
         }
         if (user.termsAcceptedAt !== null) {
-            throw new AppError("User already onboarding", 400)
+            throw new AppError(
+                `User already onboarding at ${user.termsAcceptedAt.toISOString()}`,
+                400
+            )
         }
 
         // After this validation: body.answers will cover all requiredQuestions
@@ -35,36 +38,36 @@ export class UserUsecase {
 
         const mappedOnboarding = await this.mapOnboardingRequest(body)
 
+        const timestamp = new Date()
         await this.userRepository.createUserAnswer(
             authUser.id,
-            mappedOnboarding
+            mappedOnboarding,
+            timestamp
         )
     }
 
+    // Get optionId from optionText
     private async mapOnboardingRequest(
         body: OnboardingRequest
     ): Promise<MappedOnboarding> {
-        return Promise.all(
-            body.answers.map(async ({ questionId, optionText }) => {
-                const questionOptionId =
-                    await this.questionRepository.getQuestionOptionId(
-                        questionId,
-                        optionText
-                    )
-                if (!questionOptionId) {
-                    throw new AppError("Invalid optionText", 400)
-                }
+        // return Promise.all(
+        //     body.answers.map(async ({ questionId, optionText }) => {
+        //         const questionOptionId =
+        //             await this.questionRepository.getQuestionOptionId(
+        //                 questionId,
+        //                 optionText
+        //             )
+        //         if (!questionOptionId) {
+        //             throw new AppError("Invalid optionText", 400)
+        //         }
 
-                return {
-                    questionId: questionId,
-                    optionId: questionOptionId,
-                }
-            })
-        )
+        //         return {
+        //             questionId: questionId,
+        //             optionId: questionOptionId,
+        //         }
+        //     })
+        // )
 
-        /*
-        Batch
-    
         const questionOptions =
             await this.questionRepository.getQuestionOptionIds(body.answers)
 
@@ -74,7 +77,7 @@ export class UserUsecase {
         const optionsMap = new Map(
             questionOptions.map((o) => [
                 `${o.questionId}-${o.optionText}`,
-                o.id,
+                o.optionId,
             ])
         )
 
@@ -84,7 +87,6 @@ export class UserUsecase {
                 `${question.questionId}-${question.optionText}`
             )!,
         }))
-        */
     }
 
     private async validateOnboardingRequest(
@@ -102,8 +104,8 @@ export class UserUsecase {
             throw new AppError("Invalid number of answers", 400)
         }
 
-        const requiredQuestions = new Set<number>(questionsId)
-        const bodyQuestions = new Set<number>()
+        const requiredQuestions = new Set<string>(questionsId)
+        const bodyQuestions = new Set<string>()
 
         for (const answer of body.answers) {
             const questionId = answer.questionId

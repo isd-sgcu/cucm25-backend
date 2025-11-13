@@ -62,9 +62,11 @@ export class UserRepository {
         return false
     }
 
-    async createUserAnswer(id: string, body: MappedOnboarding): Promise<void> {
-        const timestamp = new Date()
-
+    async createUserAnswer(
+        id: string,
+        body: MappedOnboarding,
+        timestamp: Date
+    ): Promise<void> {
         await prisma.$transaction(async (tx) => {
             await tx.userAnswer.createMany({
                 data: body.map((answer) => ({

@@ -1,6 +1,6 @@
 export interface OnboardingRequest {
     answers: Array<{
-        questionId: number
+        questionId: string
         optionText: string
     }>
 }

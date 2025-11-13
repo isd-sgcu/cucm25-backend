@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma"
 import { RoleType } from "@prisma/client"
 
 export class QuestionRepository {
-    async getAllQuestionsId(role: RoleType): Promise<Array<number>> {
+    async getAllQuestionsId(role: RoleType): Promise<Array<string>> {
         const questions = await prisma.question.findMany({
             where: {
                 role: role,
@@ -15,12 +15,11 @@ export class QuestionRepository {
         return questions.map((question) => question.id)
     }
 
-    /* 
-    Batch
-    
     async getQuestionOptionIds(
-        lookups: Array<{ questionId: number; optionText: string }>
-    ): Promise<Array<{ id: number; questionId: number; optionText: string }>> {
+        lookups: Array<{ questionId: string; optionText: string }>
+    ): Promise<
+        Array<{ optionId: number; questionId: string; optionText: string }>
+    > {
         const questionOptions = await prisma.questionOption.findMany({
             where: {
                 OR: lookups.map((l) => ({
@@ -36,15 +35,14 @@ export class QuestionRepository {
         })
 
         return questionOptions.map((questionOption) => ({
-            id: questionOption.id,
+            optionId: questionOption.id,
             questionId: questionOption.question_id,
             optionText: questionOption.option_text,
         }))
     }
-    */
 
     async getQuestionOptionId(
-        id: number,
+        id: string,
         optionText: string
     ): Promise<number | null> {
         const questionOption = await prisma.questionOption.findFirst({

@@ -13,6 +13,6 @@ export interface ParsedUser {
 }
 
 export type MappedOnboarding = Array<{
-    questionId: number
+    questionId: string
     optionId: number
 }>

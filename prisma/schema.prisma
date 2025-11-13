@@ -69,7 +69,7 @@ model Wallet {
 }
 
 model Question {
-    id            Int              @id
+    id            String              @id
     title         String
     role          RoleType
     created_at    DateTime         @default(now()) @db.Timestamptz()
@@ -81,7 +81,7 @@ model Question {
 
 model QuestionOption {
     id          Int          @id @default(autoincrement())
-    question_id Int
+    question_id String
     option_text String       
     created_at    DateTime   @default(now()) @db.Timestamptz()
     question    Question     @relation(fields: [question_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -93,7 +93,7 @@ model QuestionOption {
 
 model UserAnswer {
     user_id            String         @db.Uuid
-    question_id        Int
+    question_id        String
     selected_option_id Int
     answered_at        DateTime       @default(now()) @db.Timestamptz()
     question           Question       @relation(fields: [question_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
