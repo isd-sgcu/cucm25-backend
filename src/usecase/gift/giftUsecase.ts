@@ -15,7 +15,7 @@ async function checkRecipientExistence(username: string | null) {
 
 	const userRepository = new UserRepository();
 	// TODO: Unnecessary extra call just to check for existence.
-	const recipient = userRepository.getUserByUsername(username);
+	const recipient = await userRepository.getUserByUsername(username);
 
 	if (!recipient) {
 		console.warn("Recipient doesn't actually exist.");
@@ -128,7 +128,7 @@ export class GiftUsecase {
 			ok = false;
 		}
 
-		if (!checkRecipientExistence(recipientUsername)) {
+		if (!(await checkRecipientExistence(recipientUsername))) {
 			console.warn(
 				`Unable to send gift for ${sender.username}: Recipient ${recipientUsername} doesn't exist.`
 			);
