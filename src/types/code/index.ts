@@ -1,5 +1,7 @@
+import { TARGET_ROLES } from "@/constant/systemConfig"
+
 export interface GenerateCodeRequest {
-    targetRole: "junior" | "senior" | "all"
+    targetRole: typeof TARGET_ROLES[keyof typeof TARGET_ROLES]
     activityName: string
     rewardCoin: number
     expiresAt: string

@@ -3,6 +3,7 @@ import { SystemRepository } from "@/repository/system/systemRepository"
 import { SystemUsecase } from "@/usecase/system/systemUsecase"
 import { verifyJwt } from "@/utils/jwt"
 import { logger } from "@/utils/logger"
+import { ROLE_MAPPINGS } from "@/constant/systemConfig"
 import { prisma } from "@/lib/prisma"
 
 const systemRepository = new SystemRepository(prisma)
@@ -31,14 +32,8 @@ export async function checkSystemAvailability(
                     const decoded = verifyJwt(token)
                     const user = await systemRepository.getUserWithRole(decoded.id)
                     if (user) {
-                        // Map RoleType enum to string for system check
-                        const roleMapping: Record<string, string> = {
-                            "PARTICIPANT": "junior",
-                            "STAFF": "senior", 
-                            "MODERATOR": "moderator",
-                            "ADMIN": "senior"
-                        }
-                        userRole = roleMapping[user.role] || "junior"
+                        // Map RoleType enum to string for system check using shared config
+                        userRole = ROLE_MAPPINGS[user.role as keyof typeof ROLE_MAPPINGS] || ROLE_MAPPINGS.PARTICIPANT
                         logger.debug("SystemCheck", "User role mapped", { 
                             originalRole: user.role, 
                             mappedRole: userRole 
@@ -59,20 +54,20 @@ export async function checkSystemAvailability(
         if (!isAvailable) {
             let roleMessage: string
             if (userRole === "junior") {
-                roleMessage = "น้องค่าย"
+                roleMessage = "participants"
             } else if (userRole === "moderator") {
-                roleMessage = "ผู้ดำเนินการ"
+                roleMessage = "moderators"
             } else if (userRole === "senior") {
-                roleMessage = "พี่ค่าย"
+                roleMessage = "staff members"
             } else if (userRole) {
-                roleMessage = `ผู้ใช้ประเภท (${userRole})`
+                roleMessage = `users with role (${userRole})`
             } else {
-                roleMessage = "ผู้ใช้ที่ไม่ทราบประเภท"
+                roleMessage = "unidentified users"
             }
             
             logger.warn("SystemCheck", "System access blocked for role", { userRole })
             res.status(503).json({
-                error: `ระบบสำหรับ${roleMessage}ปิดการใช้งานชั่วคราว กรุณาลองใหม่อีกครั้งในภายหลัง`,
+                error: `System for ${roleMessage} is temporarily disabled. Please try again later.`,
                 systemStatus: "disabled",
                 userRole: userRole || "unknown"
             })
@@ -81,7 +76,11 @@ export async function checkSystemAvailability(
         next()
     } catch (error) {
         logger.error("SystemCheck", "System availability check failed", error)
-        // On error, allow the request to proceed (fail-open)
-        next()
+        // On error, block the request (fail-closed) for security
+        res.status(503).json({
+            error: "Unable to verify system availability at this time. Please try again later.",
+            systemStatus: "unknown",
+        })
+        return
     }
 }

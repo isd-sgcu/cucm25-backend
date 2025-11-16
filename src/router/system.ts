@@ -11,7 +11,7 @@ export default function systemRouter() {
     const systemUsecase = new SystemUsecase(systemRepository)
     const systemController = new SystemController(systemUsecase)
 
-    // POST /api/system/toggle - Toggle system settings (Admin and Moderator)
+    // POST /api/system/toggle - Toggle system settings (Admin only)
     router.post("/toggle", authMiddleware, systemController.toggleSystem.bind(systemController))
 
     // GET /api/system/status - Get system status (All users)

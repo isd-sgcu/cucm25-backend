@@ -1,6 +1,8 @@
 import { ICodeUsecase } from "@/usecase/code/codeUsecase"
 import { Request, Response } from "express"
 import { AppError } from "@/types/error/AppError"
+import { logger } from "@/utils/logger"
+import { TARGET_ROLES } from "@/constant/systemConfig"
 
 export class CodeController {
     constructor(private codeUsecase: ICodeUsecase) {}
@@ -33,9 +35,10 @@ export class CodeController {
                 return
             }
 
-            if (!["junior", "senior", "all"].includes(targetRole)) {
+            const validTargetRoles = Object.values(TARGET_ROLES)
+            if (!validTargetRoles.includes(targetRole)) {
                 res.status(400).json({
-                    error: "targetRole must be one of: junior, senior, all",
+                    error: `targetRole must be one of: ${validTargetRoles.join(', ')}`,
                 })
                 return
             }
@@ -60,7 +63,7 @@ export class CodeController {
                     error: error.message,
                 })
             } else {
-                console.error("Generate code error:", error)
+                logger.error("CodeController", "Generate code error", error)
                 res.status(500).json({
                     error: "Internal server error",
                 })
@@ -101,7 +104,7 @@ export class CodeController {
                     error: error.message,
                 })
             } else {
-                console.error("Redeem code error:", error)
+                logger.error("CodeController", "Redeem code error", error)
                 res.status(500).json({
                     error: "Internal server error",
                 })

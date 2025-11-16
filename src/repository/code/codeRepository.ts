@@ -1,6 +1,8 @@
-import { PrismaClient } from "@prisma/client"
+import { PrismaClient, Prisma } from "@prisma/client"
 import { randomInt } from "crypto"
 import { AppError } from "@/types/error/AppError"
+import { BUSINESS_RULES } from "@/constant/systemConfig"
+import { logger } from "@/utils/logger"
 
 export interface ICodeRepository {
     generateUniqueCodeString(): Promise<string>
@@ -37,54 +39,66 @@ export interface ICodeRepository {
     }): Promise<any>
 
     getUserWithRole(userId: string): Promise<any | null>
+
+    executeTransaction<T>(
+        callback: (prisma: Prisma.TransactionClient) => Promise<T>
+    ): Promise<T>
 }
 
 export class CodeRepository implements ICodeRepository {
     constructor(private prisma: PrismaClient) {}
 
     async generateUniqueCodeString(): Promise<string> {
-        const MAX_RETRIES = 100
+        const MAX_RETRIES = BUSINESS_RULES.CODE_GENERATION.MAX_RETRIES
         let attempts = 0
 
         while (attempts < MAX_RETRIES) {
             attempts++
 
             // Cryptographically secure random generation
-            // สุ่ม 1 ตัวอักษรพิมพ์ใหญ่ (A-Z) = 26 combinations
+            // Generate 1 uppercase letter (A-Z) = 26 combinations
             const letterIndex = randomInt(0, 26)
             const letter = String.fromCharCode(65 + letterIndex)
             
-            // สุ่ม 3 ตัวเลข (000-999) = 1,000 combinations
+            // Generate 3 digits (000-999) = 1,000 combinations
             const numbers = randomInt(0, 1000).toString().padStart(3, '0')
             
-            // รวม = 26 × 1,000 = 26,000 possible combinations
+            // Total combinations = 26 × 1,000 = 26,000 possible codes
             const codeString = letter + numbers
             
-            // เช็คว่าซ้ำไหม
+            // Check if code already exists
             const existingCode = await this.findCodeByString(codeString)
             if (!existingCode) {
                 return codeString
             }
             
             // Log warning เมื่อเริ่มมี collision บ่อย
-            if (attempts > 50) {
-                console.warn(`Code generation collision detected. Attempt ${attempts}/${MAX_RETRIES}. Format: ${letter + numbers}`)
+            if (attempts > BUSINESS_RULES.CODE_GENERATION.WARNING_THRESHOLD) {
+                logger.warn("CodeRepository", "Code generation collision detected", {
+                    attempt: attempts,
+                    maxRetries: MAX_RETRIES,
+                    codeFormat: `${letter}${numbers}`
+                })
             }
         }
 
-        // หากพยายามครบแล้วยังไม่ได้ ให้ใช้ timestamp + random เพื่อความแน่นอน
-        const timestamp = Date.now().toString().slice(-3) // เอา 3 หลักสุดท้าย
+        // If all attempts failed, use timestamp-based fallback for guaranteed uniqueness
+        const timestamp = Date.now().toString().slice(-3) // Last 3 digits of timestamp
         const fallbackCode = `X${timestamp}` // X + 3 digit timestamp
         
-        console.warn(`Code generation reached max retries. Using fallback: ${fallbackCode}`)
+        logger.warn("CodeRepository", "Code generation reached max retries, using fallback", {
+            maxRetries: MAX_RETRIES,
+            fallbackCode,
+            timestamp
+        })
         
-        // ตรวจสอบ fallback code ซ้ำไหม (โอกาสน้อยมาก)
+        // Check if fallback code already exists (very unlikely)
         const existingFallback = await this.findCodeByString(fallbackCode)
         if (!existingFallback) {
             return fallbackCode
         }
         
-        // หากยัง fallback ยังซ้ำ ให้ throw error
+        // If even fallback code exists, throw error
         throw new AppError(
             'Unable to generate unique code after maximum retries. Please try again or contact support.',
             500
@@ -194,5 +208,11 @@ export class CodeRepository implements ICodeRepository {
         return await this.prisma.user.findUnique({
             where: { id: userId },
         })
+    }
+
+    async executeTransaction<T>(
+        callback: (prisma: Prisma.TransactionClient) => Promise<T>
+    ): Promise<T> {
+        return await this.prisma.$transaction(callback)
     }
 }

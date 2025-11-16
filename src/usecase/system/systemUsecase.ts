@@ -1,5 +1,6 @@
 import { ISystemRepository } from "@/repository/system/systemRepository"
 import { AppError } from "@/types/error/AppError"
+import { GIFT_SYSTEM, SYSTEM_DEFAULTS, ROLE_MAPPINGS, SYSTEM_SETTINGS } from "@/constant/systemConfig"
 import { 
     SystemToggleRequest, 
     SystemToggleResponse, 
@@ -36,12 +37,12 @@ export class SystemUsecase implements ISystemUsecase {
             throw new AppError("Only administrators can modify system settings", 403)
         }
         
-        // Validate setting key
+        // Validate setting key using centralized constants
         const validKeys: SettingKey[] = [
-            "junior_login_enabled",
-            "mod_login_enabled",
-            "senior_login_enabled",
-            "gift_hourly_quota"
+            SYSTEM_SETTINGS.JUNIOR_LOGIN_ENABLED as SettingKey,
+            SYSTEM_SETTINGS.MOD_LOGIN_ENABLED as SettingKey,
+            SYSTEM_SETTINGS.SENIOR_LOGIN_ENABLED as SettingKey,
+            SYSTEM_SETTINGS.GIFT_HOURLY_QUOTA as SettingKey
         ]
         
         if (!validKeys.includes(data.settingKey as SettingKey)) {
@@ -50,11 +51,11 @@ export class SystemUsecase implements ISystemUsecase {
         
         let settingValue: string
         if (data.settingKey === "gift_hourly_quota") {
-            // For quota, enabled=true means default value, enabled=false means 0
-            settingValue = data.enabled ? "5" : "0"
+            // For quota, enabled=true means default value, enabled=false means disabled
+            settingValue = data.enabled ? GIFT_SYSTEM.DEFAULT_HOURLY_QUOTA.toString() : GIFT_SYSTEM.DISABLED_QUOTA.toString()
         } else {
             // For boolean settings
-            settingValue = data.enabled ? "true" : "false"
+            settingValue = data.enabled ? SYSTEM_DEFAULTS.BOOLEAN_ENABLED : SYSTEM_DEFAULTS.BOOLEAN_DISABLED
         }
         
         const updatedSetting = await this.systemRepository.updateSystemSetting(
@@ -83,29 +84,40 @@ export class SystemUsecase implements ISystemUsecase {
         }, new Date(0))
         
         return {
-            juniorLoginEnabled: settingsMap.get("junior_login_enabled") === "true",
-            modLoginEnabled: settingsMap.get("mod_login_enabled") === "true",
-            seniorLoginEnabled: settingsMap.get("senior_login_enabled") === "true", 
-            giftHourlyQuota: parseInt(settingsMap.get("gift_hourly_quota") || "5"),
+            juniorLoginEnabled: settingsMap.get(SYSTEM_SETTINGS.JUNIOR_LOGIN_ENABLED) === SYSTEM_DEFAULTS.BOOLEAN_ENABLED,
+            modLoginEnabled: settingsMap.get(SYSTEM_SETTINGS.MOD_LOGIN_ENABLED) === SYSTEM_DEFAULTS.BOOLEAN_ENABLED,
+            seniorLoginEnabled: settingsMap.get(SYSTEM_SETTINGS.SENIOR_LOGIN_ENABLED) === SYSTEM_DEFAULTS.BOOLEAN_ENABLED, 
+            giftHourlyQuota: parseInt(settingsMap.get(SYSTEM_SETTINGS.GIFT_HOURLY_QUOTA) || SYSTEM_DEFAULTS.GIFT_QUOTA),
             lastUpdated: lastUpdated.toISOString()
         }
     }
     
     async checkSystemAvailability(userRole?: string): Promise<boolean> {
-        // Check role-specific availability
+        // Check role-specific availability using centralized role mappings
         if (userRole) {
-            if (userRole === "junior") {
-                return await this.systemRepository.isSystemEnabled("junior_login_enabled")
+            let settingKey: SettingKey | undefined
+            
+            // Map role strings to their corresponding system setting keys
+            switch (userRole) {
+                case ROLE_MAPPINGS.PARTICIPANT:
+                    settingKey = SYSTEM_SETTINGS.JUNIOR_LOGIN_ENABLED as SettingKey
+                    break
+                case ROLE_MAPPINGS.MODERATOR:
+                    settingKey = SYSTEM_SETTINGS.MOD_LOGIN_ENABLED as SettingKey
+                    break
+                case ROLE_MAPPINGS.STAFF:
+                case ROLE_MAPPINGS.ADMIN:
+                    // Both STAFF and ADMIN use senior settings (since ADMIN maps to "senior")
+                    settingKey = SYSTEM_SETTINGS.SENIOR_LOGIN_ENABLED as SettingKey
+                    break
             }
-            if (userRole === "moderator") {
-                return await this.systemRepository.isSystemEnabled("mod_login_enabled")
-            }
-            if (userRole === "senior") {
-                return await this.systemRepository.isSystemEnabled("senior_login_enabled")
+            
+            if (settingKey) {
+                return await this.systemRepository.isSystemEnabled(settingKey)
             }
         }
         
-        // If no role specified or role is admin/moderator, allow access
+        // If no role specified or role is not recognized, allow access
         return true
     }
 }

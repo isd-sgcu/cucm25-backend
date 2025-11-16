@@ -1,6 +1,7 @@
 import { ISystemUsecase } from "@/usecase/system/systemUsecase"
 import { Request, Response } from "express"
 import { AppError } from "@/types/error/AppError"
+import { logger } from "@/utils/logger"
 
 export class SystemController {
     constructor(private systemUsecase: ISystemUsecase) {}
@@ -49,7 +50,7 @@ export class SystemController {
                     error: error.message,
                 })
             } else {
-                console.error("Toggle system error:", error)
+                logger.error("SystemController", "Toggle system error", error)
                 res.status(500).json({
                     error: "Internal server error",
                 })
@@ -66,7 +67,7 @@ export class SystemController {
                 data: result,
             })
         } catch (error) {
-            console.error("Get system status error:", error)
+            logger.error("SystemController", "Get system status error", error)
             res.status(500).json({
                 error: "Internal server error",
             })

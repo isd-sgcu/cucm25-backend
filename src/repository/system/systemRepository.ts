@@ -1,5 +1,6 @@
 import { SettingKey } from "@/types/system"
 import { PrismaClient } from "@prisma/client"
+import { logger } from "@/utils/logger"
 
 export interface ISystemRepository {
     getSystemSetting(settingKey: SettingKey): Promise<any | null>
@@ -55,7 +56,7 @@ export class SystemRepository implements ISystemRepository {
             const setting = await this.getSystemSetting(settingKey);
             return setting?.setting_value === 'true';
         } catch (error) {
-            console.error('Error checking if system is enabled:', error);
+            logger.error('SystemRepository', 'Error checking if system is enabled', error);
             return false;
         }  
     }
@@ -68,10 +69,10 @@ export class SystemRepository implements ISystemRepository {
     
     private getDefaultDescription(settingKey: SettingKey): string {
         const descriptions: Record<SettingKey, string> = {
-            "junior_login_enabled": "การเปิด/ปิดระบบสำหรับน้องค่าย", 
-            "mod_login_enabled": "การเปิด/ปิดระบบสำหรับผู้ดำเนินการ",
-            "senior_login_enabled": "การเปิด/ปิดระบบสำหรับพี่ค่าย",
-            "gift_hourly_quota": "จำนวนครั้งที่ส่งของขวัญได้ต่อชั่วโมง"
+            "junior_login_enabled": "Enable/disable system access for participants", 
+            "mod_login_enabled": "Enable/disable system access for moderators",
+            "senior_login_enabled": "Enable/disable system access for staff members",
+            "gift_hourly_quota": "Number of gifts that can be sent per hour"
         }
         return descriptions[settingKey] || ""
     }

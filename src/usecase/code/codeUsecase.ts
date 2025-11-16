@@ -1,5 +1,7 @@
 import { ICodeRepository } from "@/repository/code/codeRepository"
 import { AppError } from "@/types/error/AppError"
+import { Prisma } from "@prisma/client"
+import { ROLE_MAPPINGS, DATABASE_ROLES, TARGET_ROLES } from "@/constant/systemConfig"
 import {
     GenerateCodeRequest,
     GenerateCodeResponse,
@@ -36,8 +38,8 @@ export class CodeUsecase implements ICodeUsecase {
 
         const creatorRole = creator.role
         if (
-            creatorRole !== "MODERATOR" &&
-            creatorRole !== "ADMIN"
+            creatorRole !== DATABASE_ROLES.MODERATOR &&
+            creatorRole !== DATABASE_ROLES.ADMIN
         ) {
             throw new AppError(
                 "Only moderators and admins can generate codes",
@@ -46,8 +48,8 @@ export class CodeUsecase implements ICodeUsecase {
         }
 
         if (
-            creatorRole === "MODERATOR" &&
-            data.targetRole !== "junior"
+            creatorRole === DATABASE_ROLES.MODERATOR &&
+            data.targetRole !== TARGET_ROLES.JUNIOR
         ) {
             throw new AppError(
                 "Moderators can only create junior-only codes",
@@ -55,8 +57,8 @@ export class CodeUsecase implements ICodeUsecase {
             )
         }
 
-        if (data.rewardCoin < 0) {
-            throw new AppError("Reward coin must be non-negative", 400)
+        if (data.rewardCoin <= 0) {
+            throw new AppError("Reward coin must be greater than zero", 400)
         }
 
         // Parse and validate expiration date (required)
@@ -110,12 +112,6 @@ export class CodeUsecase implements ICodeUsecase {
             throw new AppError("Code has expired", 400)
         }
 
-        const alreadyRedeemed =
-            await this.codeRepository.checkIfUserRedeemedCode(userId, code.id)
-        if (alreadyRedeemed) {
-            throw new AppError("You have already redeemed this code", 400)
-        }
-
         const user = await this.codeRepository.getUserWithRole(userId)
         if (!user) {
             throw new AppError("User not found", 404)
@@ -123,17 +119,10 @@ export class CodeUsecase implements ICodeUsecase {
 
         const userRole = user.role
         
-        // Map RoleType enum to target role strings
-        const roleMapping: Record<string, string> = {
-            "PARTICIPANT": "junior",
-            "STAFF": "senior", 
-            "MODERATOR": "senior",
-            "ADMIN": "senior"
-        }
+        // Map RoleType enum to target role strings using shared config
+        const mappedUserRole = ROLE_MAPPINGS[userRole as keyof typeof ROLE_MAPPINGS] || ROLE_MAPPINGS.PARTICIPANT
         
-        const mappedUserRole = roleMapping[userRole] || "junior"
-        
-        if (code.target_role !== "all" && code.target_role !== mappedUserRole) {
+        if (code.target_role !== TARGET_ROLES.ALL && code.target_role !== mappedUserRole) {
             throw new AppError(
                 `This code is only for ${code.target_role} role`,
                 403
@@ -147,15 +136,50 @@ export class CodeUsecase implements ICodeUsecase {
 
         const newBalance = wallet.coin_balance + code.reward_coin
 
-        await this.codeRepository.createRedemption(userId, code.id)
+        // Use database transaction with duplicate check inside to prevent race conditions
+        const result = await this.codeRepository.executeTransaction(async (prisma: Prisma.TransactionClient) => {
+            // Check if already redeemed inside transaction for atomic consistency
+            const existingRedemption = await prisma.codeRedemption.findUnique({
+                where: {
+                    user_id_code_id: {
+                        user_id: userId,
+                        code_id: code.id,
+                    },
+                },
+            })
 
-        await this.codeRepository.updateWalletBalance(userId, newBalance)
+            if (existingRedemption) {
+                throw new AppError("You have already redeemed this code", 400)
+            }
 
-        const transaction = await this.codeRepository.createTransaction({
-            recipientUserId: userId,
-            type: "CODE_REDEMPTION",
-            coinAmount: code.reward_coin,
-            relatedCodeId: code.id,
+            // Create redemption record (protected by unique constraint)
+            await prisma.codeRedemption.create({
+                data: {
+                    user_id: userId,
+                    code_id: code.id,
+                },
+            })
+
+            // Update wallet balance
+            await prisma.wallet.update({
+                where: { user_id: userId },
+                data: {
+                    coin_balance: newBalance,
+                    updated_at: new Date(),
+                },
+            })
+
+            // Create transaction record
+            const transaction = await prisma.transaction.create({
+                data: {
+                    recipient_user_id: userId,
+                    type: "CODE_REDEMPTION",
+                    coin_amount: code.reward_coin,
+                    related_code_id: code.id,
+                },
+            })
+
+            return { transactionId: transaction.id }
         })
 
         return {
@@ -163,7 +187,7 @@ export class CodeUsecase implements ICodeUsecase {
             message: `Successfully redeemed code: ${code.activity_name}`,
             rewardCoin: code.reward_coin,
             newBalance,
-            transactionId: transaction.id,
+            transactionId: result.transactionId,
         }
     }
 }
