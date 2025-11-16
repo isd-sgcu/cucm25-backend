@@ -4,6 +4,7 @@ import cors from "cors"
 import bodyParser from "body-parser"
 import routerManager from "@/router"
 import { errorHandler } from "@/middleware/errorHandler"
+import { checkSystemAvailability } from "@/middleware/systemCheck"
 
 const app = express()
 const PORT = 8080
@@ -16,6 +17,9 @@ app.use((req, _res, next) => {
     console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`)
     next()
 })
+
+// System availability check middleware (applies to all /api routes)
+app.use("/api", checkSystemAvailability)
 
 app.use("/api", routerManager())
 
