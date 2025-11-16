@@ -8,7 +8,7 @@ export class TransactionRepository {
 		recipient: ParsedUser,
 		amount: number
 	): Promise<void> {
-		return await prisma.$transaction(async (tx) => {
+		await prisma.$transaction(async (tx) => {
 			await tx.transaction.create({
 				data: {
 					sender_user_id: sender.id,
