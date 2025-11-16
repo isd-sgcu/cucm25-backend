@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma"
-import type { MappedOnboarding, ParsedUser } from "@/types/user"
+import type { OnboardingAnswers, ParsedUser } from "@/types/user"
 import { User } from "@prisma/client"
 
 export class UserRepository {
@@ -64,16 +64,16 @@ export class UserRepository {
 
     async createUserAnswer(
         id: string,
-        body: MappedOnboarding,
+        body: OnboardingAnswers,
         timestamp: Date
     ): Promise<void> {
         await prisma.$transaction(async (tx) => {
             await tx.userAnswer.createMany({
                 data: body.map((answer) => ({
-                    user_id: id,
-                    question_id: answer.questionId,
-                    selected_option_id: answer.optionId,
-                    answered_at: timestamp,
+                    userId: id,
+                    questionId: answer.questionId,
+                    answer: answer.optionText,
+                    answeredAt: timestamp,
                 })),
             })
 

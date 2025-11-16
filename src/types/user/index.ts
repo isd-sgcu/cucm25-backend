@@ -12,7 +12,7 @@ export interface ParsedUser {
     school: string
 }
 
-export type MappedOnboarding = Array<{
+export type OnboardingAnswers = Array<{
     questionId: string
-    optionId: number
+    optionText: string
 }>
