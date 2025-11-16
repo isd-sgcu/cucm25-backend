@@ -124,7 +124,7 @@ export class UserRepository {
 	/**
 	 * Adds to the total coin amount to the user with `id`'s wallet
 	 * @param {string} id The target user's id.
-	 * @param {number} amount The amount to add. Negative numbers should not be used unless for exceptional cases.
+	 * @param {number} amount The amount to add. Negative numbers are allowed but should not be used unless for exceptional cases.
 	 */
 	async addTotalCoinAmount(id: string, amount: number) {
 		await prisma.user.update({
