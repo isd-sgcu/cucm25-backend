@@ -1,5 +1,5 @@
 import { GiftRepository } from "@/repository/gift/giftRepository";
-import { UserRepository } from "@/repository/mock/userRepository";
+import { UserRepository } from "@/repository/user/userRepository";
 import { TransactionRepository } from "@/repository/transaction/transactionRepository";
 import { AuthUser } from "@/types/auth";
 import { ParsedUser } from "@/types/user";
@@ -88,7 +88,7 @@ export class GiftUsecase {
 		let ok = true;
 
 		const userRepository = new UserRepository();
-		const senderData = await userRepository.getUserById(sender.id);
+		const senderData = await userRepository.getParsedUserById(sender.id);
 
 		if (!senderData?.wallets) {
 			return {

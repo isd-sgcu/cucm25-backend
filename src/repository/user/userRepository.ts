@@ -11,21 +11,21 @@ export class UserRepository {
                 },
             })
 
-            await tx.user.create({
-                data: {
-                    id: user.id,
-                    studentId: user.studentId,
-                    username: user.username,
-                    nickname: user.nickname,
-                    firstname: user.firstname,
-                    lastname: user.lastname,
-                    role: user.role,
-                    educationLevel: user.educationLevel,
-                    school: user.school,
-                },
-            })
-        })
-    }
+			await tx.user.create({
+				data: {
+					id: user.id,
+					studentId: user.studentId,
+					username: user.username,
+					nickname: user.nickname,
+					firstname: user.firstname,
+					lastname: user.lastname,
+					role: user.role,
+					educationLevel: user.educationLevel,
+					school: user.school,
+				},
+			});
+		});
+	}
 
     async getUser(
         input: Partial<Pick<User, "id" | "username">>
