@@ -5,7 +5,6 @@ import { AuthUser } from "@/types/auth";
 import { ParsedUser } from "@/types/user";
 
 const SENDING_QUOTA = 7;
-const RESET_TIME = 1000 * 60 * 60;
 const MAXIMUM_AMOUNT_PER_SEND = 1000000;
 
 async function checkRecipientExistence(username: string | null) {
@@ -127,7 +126,7 @@ export class GiftUsecase {
 				SENDING_QUOTA - remaining;
 
 			console.log(
-				`Reset ${senderData.id}'s sending quota to ${SENDING_QUOTA}, as it has been more than ${RESET_TIME} milliseconds after the last gift sending.`
+				`Reset ${senderData.id}'s sending quota to ${SENDING_QUOTA}, as it has been more than 3600000 milliseconds after the last gift sending.`
 			);
 		}
 
