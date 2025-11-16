@@ -1,4 +1,3 @@
-import { prisma } from "@/lib/prisma"
 import { SettingKey } from "@/types/system"
 import { PrismaClient } from "@prisma/client"
 
@@ -70,6 +69,7 @@ export class SystemRepository implements ISystemRepository {
     private getDefaultDescription(settingKey: SettingKey): string {
         const descriptions: Record<SettingKey, string> = {
             "junior_login_enabled": "การเปิด/ปิดระบบสำหรับน้องค่าย", 
+            "mod_login_enabled": "การเปิด/ปิดระบบสำหรับผู้ดำเนินการ",
             "senior_login_enabled": "การเปิด/ปิดระบบสำหรับพี่ค่าย",
             "gift_hourly_quota": "จำนวนครั้งที่ส่งของขวัญได้ต่อชั่วโมง"
         }

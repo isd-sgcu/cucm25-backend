@@ -13,6 +13,7 @@ export interface SystemToggleResponse {
 
 export interface SystemStatusResponse {
     juniorLoginEnabled: boolean
+    modLoginEnabled: boolean
     seniorLoginEnabled: boolean
     giftHourlyQuota: number
     lastUpdated: string
@@ -27,5 +28,6 @@ export interface SystemSetting {
 
 export type SettingKey = 
     | "junior_login_enabled" 
+    | "mod_login_enabled"
     | "senior_login_enabled"
     | "gift_hourly_quota"

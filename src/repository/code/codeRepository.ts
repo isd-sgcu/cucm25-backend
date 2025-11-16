@@ -1,5 +1,6 @@
-import { prisma } from "@/lib/prisma"
 import { PrismaClient } from "@prisma/client"
+import { randomInt } from "crypto"
+import { AppError } from "@/types/error/AppError"
 
 export interface ICodeRepository {
     generateUniqueCodeString(): Promise<string>
@@ -48,10 +49,13 @@ export class CodeRepository implements ICodeRepository {
         while (attempts < MAX_RETRIES) {
             attempts++
 
+            // Cryptographically secure random generation
             // สุ่ม 1 ตัวอักษรพิมพ์ใหญ่ (A-Z) = 26 combinations
-            const letter = String.fromCharCode(65 + Math.floor(Math.random() * 26))
+            const letterIndex = randomInt(0, 26)
+            const letter = String.fromCharCode(65 + letterIndex)
+            
             // สุ่ม 3 ตัวเลข (000-999) = 1,000 combinations
-            const numbers = Math.floor(Math.random() * 1000).toString().padStart(3, '0')
+            const numbers = randomInt(0, 1000).toString().padStart(3, '0')
             
             // รวม = 26 × 1,000 = 26,000 possible combinations
             const codeString = letter + numbers
@@ -81,7 +85,10 @@ export class CodeRepository implements ICodeRepository {
         }
         
         // หากยัง fallback ยังซ้ำ ให้ throw error
-        throw new Error('Unable to generate unique code: system may be approaching capacity limit')
+        throw new AppError(
+            'Unable to generate unique code after maximum retries. Please try again or contact support.',
+            500
+        )
     }
 
     async createCode(data: {

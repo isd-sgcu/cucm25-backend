@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express"
 import { SystemRepository } from "@/repository/system/systemRepository"
 import { SystemUsecase } from "@/usecase/system/systemUsecase"
 import { verifyJwt } from "@/utils/jwt"
+import { logger } from "@/utils/logger"
 import { prisma } from "@/lib/prisma"
 
 const systemRepository = new SystemRepository(prisma)
@@ -34,40 +35,52 @@ export async function checkSystemAvailability(
                         const roleMapping: Record<string, string> = {
                             "PARTICIPANT": "junior",
                             "STAFF": "senior", 
-                            "MODERATOR": "senior",
+                            "MODERATOR": "moderator",
                             "ADMIN": "senior"
                         }
                         userRole = roleMapping[user.role] || "junior"
-                        console.log(`[SystemCheck] User ${decoded.id} has role: ${user.role} -> mapped to: ${userRole}`)
+                        logger.debug("SystemCheck", "User role mapped", { 
+                            originalRole: user.role, 
+                            mappedRole: userRole 
+                        })
                     }
                 } catch (jwtError) {
                     // Invalid token, continue without user role
-                    console.log("JWT verification failed in system check:", jwtError)
+                    logger.debug("SystemCheck", "JWT verification failed", { error: String(jwtError) })
                 }
             }
         }
         
-        // Add debugging log
-        console.log(`[SystemCheck] Path: ${req.path}, UserRole: ${userRole}`)
-
         // Check system availability based on user role
         const isAvailable = await systemUsecase.checkSystemAvailability(userRole)
         
-        console.log(`[SystemCheck] Role: ${userRole}, Available: ${isAvailable}`)
+        logger.debug("SystemCheck", "Availability check result", { userRole, isAvailable })
         
         if (!isAvailable) {
-            const roleMessage = userRole === "junior" ? "น้องค่าย" : "พี่ค่าย"
-            console.log(`[SystemCheck] BLOCKING REQUEST - Role: ${userRole} is disabled`)
+            let roleMessage: string
+            if (userRole === "junior") {
+                roleMessage = "น้องค่าย"
+            } else if (userRole === "moderator") {
+                roleMessage = "ผู้ดำเนินการ"
+            } else if (userRole === "senior") {
+                roleMessage = "พี่ค่าย"
+            } else if (userRole) {
+                roleMessage = `ผู้ใช้ประเภท (${userRole})`
+            } else {
+                roleMessage = "ผู้ใช้ที่ไม่ทราบประเภท"
+            }
+            
+            logger.warn("SystemCheck", "System access blocked for role", { userRole })
             res.status(503).json({
                 error: `ระบบสำหรับ${roleMessage}ปิดการใช้งานชั่วคราว กรุณาลองใหม่อีกครั้งในภายหลัง`,
                 systemStatus: "disabled",
-                userRole: userRole
+                userRole: userRole || "unknown"
             })
             return
         }
         next()
     } catch (error) {
-        console.error("System availability check error:", error)
+        logger.error("SystemCheck", "System availability check failed", error)
         // On error, allow the request to proceed (fail-open)
         next()
     }

@@ -25,20 +25,21 @@ export class SystemUsecase implements ISystemUsecase {
         data: SystemToggleRequest,
         adminUserId: string
     ): Promise<SystemToggleResponse> {
-        // Validate admin/moderator permission
+        // Validate ADMIN-only permission (changed from ADMIN or MODERATOR)
         const user = await this.systemRepository.getUserWithRole(adminUserId)
         if (!user) {
             throw new AppError("User not found", 404)
         }
         
         const userRole = user.role
-        if (userRole !== "ADMIN" && userRole !== "MODERATOR") {
-            throw new AppError("Only administrators and moderators can modify system settings", 403)
+        if (userRole !== "ADMIN") {
+            throw new AppError("Only administrators can modify system settings", 403)
         }
         
         // Validate setting key
         const validKeys: SettingKey[] = [
-            "junior_login_enabled", 
+            "junior_login_enabled",
+            "mod_login_enabled",
             "senior_login_enabled",
             "gift_hourly_quota"
         ]
@@ -83,6 +84,7 @@ export class SystemUsecase implements ISystemUsecase {
         
         return {
             juniorLoginEnabled: settingsMap.get("junior_login_enabled") === "true",
+            modLoginEnabled: settingsMap.get("mod_login_enabled") === "true",
             seniorLoginEnabled: settingsMap.get("senior_login_enabled") === "true", 
             giftHourlyQuota: parseInt(settingsMap.get("gift_hourly_quota") || "5"),
             lastUpdated: lastUpdated.toISOString()
@@ -94,6 +96,9 @@ export class SystemUsecase implements ISystemUsecase {
         if (userRole) {
             if (userRole === "junior") {
                 return await this.systemRepository.isSystemEnabled("junior_login_enabled")
+            }
+            if (userRole === "moderator") {
+                return await this.systemRepository.isSystemEnabled("mod_login_enabled")
             }
             if (userRole === "senior") {
                 return await this.systemRepository.isSystemEnabled("senior_login_enabled")

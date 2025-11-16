@@ -59,7 +59,7 @@ export class CodeUsecase implements ICodeUsecase {
             throw new AppError("Reward coin must be non-negative", 400)
         }
 
-        // Parse และ validate expiration date (required)
+        // Parse and validate expiration date (required)
         const expiresAt = new Date(data.expiresAt)
         if (isNaN(expiresAt.getTime())) {
             throw new AppError("Invalid expiration date format", 400)
@@ -77,6 +77,14 @@ export class CodeUsecase implements ICodeUsecase {
             expiresAt: expiresAt,
         })
 
+        // Validate required fields from database
+        if (!code.expires_at) {
+            throw new AppError("Code expiration date is missing from database", 500)
+        }
+        if (!code.created_at) {
+            throw new AppError("Code creation date is missing from database", 500)
+        }
+
         return {
             id: code.id,
             codeString: code.code_string,
@@ -84,8 +92,8 @@ export class CodeUsecase implements ICodeUsecase {
             activityName: code.activity_name,
             rewardCoin: code.reward_coin,
             createdByUserId: code.created_by_user_id,
-            expiresAt: code.expires_at ? code.expires_at.toISOString() : new Date().toISOString(),
-            createdAt: code.created_at ? code.created_at.toISOString() : new Date().toISOString(),
+            expiresAt: code.expires_at.toISOString(),
+            createdAt: code.created_at.toISOString(),
         }
     }
 
