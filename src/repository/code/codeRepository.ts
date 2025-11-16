@@ -1,5 +1,4 @@
 import { prisma } from "@/lib/prisma"
-import { Code, CodeRedemption, Transaction, Wallet, User } from "@prisma/client"
 
 export interface ICodeRepository {
     generateUniqueCodeString(): Promise<string>
@@ -11,41 +10,31 @@ export interface ICodeRepository {
         rewardCoin: number
         createdByUserId: string
         expiresAt: Date
-    }): Promise<Code>
+    }): Promise<any>
 
-    findCodeByString(codeString: string): Promise<Code | null>
+    findCodeByString(codeString: string): Promise<any | null>
 
-    findCodeWithCreator(codeString: string): Promise<
-        | (Code & {
-              creator: User
-          })
-        | null
-    >
+    findCodeWithCreator(codeString: string): Promise<any | null>
 
     checkIfUserRedeemedCode(userId: string, codeId: number): Promise<boolean>
 
-    createRedemption(userId: string, codeId: number): Promise<CodeRedemption>
+    createRedemption(userId: string, codeId: number): Promise<any>
 
     updateWalletBalance(
         userId: string,
         newBalance: number
-    ): Promise<Wallet | null>
+    ): Promise<any | null>
 
-    getWalletByUserId(userId: string): Promise<Wallet | null>
+    getWalletByUserId(userId: string): Promise<any | null>
 
     createTransaction(data: {
         recipientUserId: string
         type: string
         coinAmount: number
         relatedCodeId: number
-    }): Promise<Transaction>
+    }): Promise<any>
 
-    getUserWithRole(userId: string): Promise<
-        | (User & {
-              role: { name: string }
-          })
-        | null
-    >
+    getUserWithRole(userId: string): Promise<any | null>
 }
 
 export class CodeRepository implements ICodeRepository {
@@ -73,7 +62,7 @@ export class CodeRepository implements ICodeRepository {
         rewardCoin: number
         createdByUserId: string
         expiresAt: Date
-    }): Promise<Code> {
+    }): Promise<any> {
         const createData: any = {
             code_string: data.codeString,
             target_role: data.targetRole,
@@ -88,7 +77,7 @@ export class CodeRepository implements ICodeRepository {
         })
     }
 
-    async findCodeByString(codeString: string): Promise<Code | null> {
+    async findCodeByString(codeString: string): Promise<any | null> {
         return await prisma.code.findUnique({
             where: { code_string: codeString },
         })
@@ -96,7 +85,7 @@ export class CodeRepository implements ICodeRepository {
 
     async findCodeWithCreator(
         codeString: string
-    ): Promise<(Code & { creator: User }) | null> {
+    ): Promise<any | null> {
         return await prisma.code.findUnique({
             where: { code_string: codeString },
             include: { creator: true },
@@ -121,7 +110,7 @@ export class CodeRepository implements ICodeRepository {
     async createRedemption(
         userId: string,
         codeId: number
-    ): Promise<CodeRedemption> {
+    ): Promise<any> {
         return await prisma.codeRedemption.create({
             data: {
                 user_id: userId,
@@ -133,7 +122,7 @@ export class CodeRepository implements ICodeRepository {
     async updateWalletBalance(
         userId: string,
         newBalance: number
-    ): Promise<Wallet | null> {
+    ): Promise<any | null> {
         return await prisma.wallet.update({
             where: { user_id: userId },
             data: {
@@ -143,7 +132,7 @@ export class CodeRepository implements ICodeRepository {
         })
     }
 
-    async getWalletByUserId(userId: string): Promise<Wallet | null> {
+    async getWalletByUserId(userId: string): Promise<any | null> {
         return await prisma.wallet.findUnique({
             where: { user_id: userId },
         })
@@ -154,7 +143,7 @@ export class CodeRepository implements ICodeRepository {
         type: string
         coinAmount: number
         relatedCodeId: number
-    }): Promise<Transaction> {
+    }): Promise<any> {
         return await prisma.transaction.create({
             data: {
                 recipient_user_id: data.recipientUserId,
@@ -165,15 +154,9 @@ export class CodeRepository implements ICodeRepository {
         })
     }
 
-    async getUserWithRole(userId: string): Promise<
-        | (User & {
-              role: { name: string }
-          })
-        | null
-    > {
+    async getUserWithRole(userId: string): Promise<any | null> {
         return await prisma.user.findUnique({
             where: { id: userId },
-            include: { role: true },
         })
     }
 }

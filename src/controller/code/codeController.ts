@@ -7,12 +7,12 @@ export class CodeController {
 
     async generateCode(req: Request, res: Response): Promise<void> {
         try {
-            const creatorUserId =
-                req.headers["x-user-id"] || req.body.creatorUserId
+            // Get user ID from JWT token (set by authMiddleware)
+            const creatorUserId = req.user?.id
 
-            if (!creatorUserId || typeof creatorUserId !== "string") {
-                res.status(400).json({
-                    error: "Creator user ID is required (x-user-id header or creatorUserId in body)",
+            if (!creatorUserId) {
+                res.status(401).json({
+                    error: "Authentication required",
                 })
                 return
             }
@@ -70,11 +70,12 @@ export class CodeController {
 
     async redeemCode(req: Request, res: Response): Promise<void> {
         try {
-            const userId = req.headers["x-user-id"] || req.body.userId
+            // Get user ID from JWT token (set by authMiddleware)
+            const userId = req.user?.id
 
-            if (!userId || typeof userId !== "string") {
-                res.status(400).json({
-                    error: "User ID is required (x-user-id header or userId in body)",
+            if (!userId) {
+                res.status(401).json({
+                    error: "Authentication required",
                 })
                 return
             }

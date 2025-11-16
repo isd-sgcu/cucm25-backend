@@ -7,12 +7,12 @@ export class SystemController {
 
     async toggleSystem(req: Request, res: Response): Promise<void> {
         try {
-            // Check admin permission
-            const adminUserId = req.headers["x-user-id"] || req.body.adminUserId
+            // Get user ID from JWT token (set by authMiddleware)
+            const adminUserId = req.user?.id
             
-            if (!adminUserId || typeof adminUserId !== "string") {
-                res.status(400).json({
-                    error: "Admin user ID is required (x-user-id header or adminUserId in body)",
+            if (!adminUserId) {
+                res.status(401).json({
+                    error: "Authentication required",
                 })
                 return
             }

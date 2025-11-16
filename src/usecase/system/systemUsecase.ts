@@ -25,14 +25,15 @@ export class SystemUsecase implements ISystemUsecase {
         data: SystemToggleRequest,
         adminUserId: string
     ): Promise<SystemToggleResponse> {
-        // Validate admin permission
+        // Validate admin/moderator permission
         const user = await this.systemRepository.getUserWithRole(adminUserId)
         if (!user) {
             throw new AppError("User not found", 404)
         }
         
-        if (!["admin", "superadmin"].includes(user.role.name)) {
-            throw new AppError("Only administrators can modify system settings", 403)
+        const userRole = user.role
+        if (userRole !== "ADMIN" && userRole !== "MODERATOR") {
+            throw new AppError("Only administrators and moderators can modify system settings", 403)
         }
         
         // Validate setting key

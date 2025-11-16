@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma"
 import { SettingKey } from "@/types/system"
-import { PrismaClient, User } from "@prisma/client"
+import { PrismaClient } from "@prisma/client"
 
 export interface ISystemRepository {
     getSystemSetting(settingKey: SettingKey): Promise<any | null>
@@ -14,12 +14,7 @@ export interface ISystemRepository {
     
     isSystemEnabled(settingKey: SettingKey): Promise<boolean>
     
-    getUserWithRole(userId: string): Promise<
-        | (User & {
-              role: { name: string }
-          })
-        | null
-    >
+    getUserWithRole(userId: string): Promise<any | null>
 }
 
 export class SystemRepository implements ISystemRepository {
@@ -66,15 +61,9 @@ export class SystemRepository implements ISystemRepository {
         }  
     }
     
-    async getUserWithRole(userId: string): Promise<
-        | (User & {
-              role: { name: string }
-          })
-        | null
-    > {
+    async getUserWithRole(userId: string): Promise<any | null> {
         return await prisma.user.findUnique({
             where: { id: userId },
-            include: { role: true },
         })
     }
     

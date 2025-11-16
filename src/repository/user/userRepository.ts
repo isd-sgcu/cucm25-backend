@@ -4,7 +4,7 @@ import { User } from "@prisma/client"
 
 export class UserRepository {
     async create(user: ParsedUser): Promise<void> {
-        return await prisma.$transaction(async (tx) => {
+        return await prisma.$transaction(async (tx: any) => {
             await tx.wallet.create({
                 data: {
                     user_id: user.id,
@@ -33,7 +33,7 @@ export class UserRepository {
                 id: id,
             },
             include: {
-                wallets: {
+                wallet: {
                     select: {
                         coin_balance: true,
                         current_level: true,

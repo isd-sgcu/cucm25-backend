@@ -34,11 +34,10 @@ export class CodeUsecase implements ICodeUsecase {
             throw new AppError("User not found", 404)
         }
 
-        const creatorRole = creator.role.name
+        const creatorRole = creator.role
         if (
-            creatorRole !== "moderator" &&
-            creatorRole !== "superadmin" &&
-            creatorRole !== "admin"
+            creatorRole !== "MODERATOR" &&
+            creatorRole !== "ADMIN"
         ) {
             throw new AppError(
                 "Only moderators and admins can generate codes",
@@ -47,7 +46,7 @@ export class CodeUsecase implements ICodeUsecase {
         }
 
         if (
-            creatorRole === "moderator" &&
+            creatorRole === "MODERATOR" &&
             data.targetRole !== "junior"
         ) {
             throw new AppError(
@@ -115,8 +114,19 @@ export class CodeUsecase implements ICodeUsecase {
             throw new AppError("User not found", 404)
         }
 
-        const userRole = user.role.name
-        if (code.target_role !== "all" && code.target_role !== userRole) {
+        const userRole = user.role
+        
+        // Map RoleType enum to target role strings
+        const roleMapping: Record<string, string> = {
+            "PARTICIPANT": "junior",
+            "STAFF": "senior", 
+            "MODERATOR": "senior",
+            "ADMIN": "senior"
+        }
+        
+        const mappedUserRole = roleMapping[userRole] || "junior"
+        
+        if (code.target_role !== "all" && code.target_role !== mappedUserRole) {
             throw new AppError(
                 `This code is only for ${code.target_role} role`,
                 403

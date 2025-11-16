@@ -39,7 +39,14 @@ model User {
     school          String
     isResetUser     Boolean        @default(false) @map("is_reset_user")
     termsAcceptedAt DateTime?      @map("terms_accepted_at") @db.Timestamptz()
-    wallets         Wallet         @relation(fields: [id], references: [user_id], onDelete: NoAction, onUpdate: NoAction, map: "users_id_fkey1")
+    
+    // Relations
+    wallet              Wallet?           @relation(fields: [id], references: [user_id], onDelete: NoAction, onUpdate: NoAction, map: "users_id_fkey1")
+    createdCodes        Code[]            @relation("CodeCreator")
+    codeRedemptions     CodeRedemption[]  @relation("UserRedemptions")
+    sentTransactions    Transaction[]     @relation("TransactionSender")
+    receivedTransactions Transaction[]    @relation("TransactionRecipient")
+    userAnswers         UserAnswer[]
 
     updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
     createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
@@ -67,9 +74,11 @@ model Code {
   target_role        String           @default("junior") @db.VarChar(50)
   activity_name      String           @db.VarChar(255)
   reward_coin        Int              @default(0)
-  created_by_user_id String           @db.VarChar
+  created_by_user_id String           @db.Uuid
   expires_at         DateTime?        @db.Timestamp(6)
   created_at         DateTime?        @default(now()) @db.Timestamp(6)
+  
+  // Relations
   redemptions        CodeRedemption[]
   creator            User             @relation("CodeCreator", fields: [created_by_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   transactions       Transaction[]
@@ -78,11 +87,13 @@ model Code {
 }
 
 model CodeRedemption {
-  user_id     String    @db.VarChar
+  user_id     String    @db.Uuid
   code_id     Int
   redeemed_at DateTime? @default(now()) @db.Timestamp(6)
+  
+  // Relations
   code        Code      @relation(fields: [code_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  user        User      @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  user        User      @relation("UserRedemptions", fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@id([user_id, code_id])
   @@map("code_redemptions")
@@ -90,12 +101,14 @@ model CodeRedemption {
 
 model Transaction {
   id                Int       @id @default(autoincrement())
-  sender_user_id    String?   @db.VarChar
-  recipient_user_id String?   @db.VarChar
+  sender_user_id    String?   @db.Uuid
+  recipient_user_id String?   @db.Uuid
   type              String    @db.VarChar(50)
   coin_amount       Int       @default(0)
   related_code_id   Int?
   created_at        DateTime? @default(now()) @db.Timestamp(6)
+  
+  // Relations
   recipient         User?     @relation("TransactionRecipient", fields: [recipient_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   relatedCode       Code?     @relation(fields: [related_code_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   sender            User?     @relation("TransactionSender", fields: [sender_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -127,10 +140,12 @@ model QuestionOption {
 }
 
 model UserAnswer {
-  user_id            String         @db.VarChar
+  user_id            String         @db.Uuid
   question_id        Int
   selected_option_id Int
   answered_at        DateTime?      @default(now()) @db.Timestamp(6)
+  
+  // Relations
   question           Question       @relation(fields: [question_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   selectedOption     QuestionOption @relation(fields: [selected_option_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   user               User           @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
