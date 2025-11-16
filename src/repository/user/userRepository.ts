@@ -36,7 +36,7 @@ export class UserRepository {
                 wallets: {
                     select: {
                         coin_balance: true,
-                        current_level: true,
+                        cumulative_coin: true,
                         gift_sends_remaining: true,
                     },
                 },
