@@ -63,12 +63,10 @@ function checkSenderResetTime(sender: ParsedUser) {
 
 	const resetTime = new Date(sender?.wallets.last_gift_sent_at);
 
-	if (resetTime.getSeconds() !== 0 || resetTime.getMinutes() !== 0) {
-		resetTime.setHours(resetTime.getHours() + 1);
-		resetTime.setMinutes(0);
-		resetTime.setSeconds(0);
-		resetTime.setMilliseconds(0);
-	}
+	resetTime.setHours(resetTime.getHours() + 1);
+	resetTime.setMinutes(0);
+	resetTime.setSeconds(0);
+	resetTime.setMilliseconds(0);
 
 	const now = new Date().getTime();
 	return now >= resetTime.getTime();
