@@ -10,7 +10,7 @@
 
 import { randomUUID } from "crypto";
 import { prisma } from "../../lib/prisma";
-import { EducationLevel, RoleType, User } from "@prisma/client";
+import { EducationLevel, RoleType } from "@prisma/client";
 require("@dotenvx/dotenvx").config();
 
 const mockNames = [
@@ -75,7 +75,6 @@ function createMockUserData() {
 	const roll = Math.floor(Math.random() * 90000000) + 10000000;
 
 	const firstName = mockNames[Math.floor(Math.random() * 20)] as string;
-	const userId = Date.now().toString();
 
 	const user = {
 		id: randomUUID(),
