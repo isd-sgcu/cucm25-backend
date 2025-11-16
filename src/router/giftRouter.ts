@@ -10,7 +10,7 @@ export default function giftRouter() {
 	const giftUsecase = new GiftUsecase(giftRepository);
 	const giftController = new GiftController(giftUsecase);
 
-	router.put(
+	router.post(
 		"/send",
 		authMiddleware,
 		giftController.sendGift.bind(giftController)
