@@ -1,17 +1,27 @@
 import { UserRepository } from "@/repository/user/userRepository"
 import { AuthUser } from "@/types/auth"
 import { AppError } from "@/types/error/AppError"
+import type { GetRequestParams } from "@/types/user/GET"
 import type {
     CreateOnboardingRequest,
     ResetOnboardingReqeust,
 } from "@/types/user/POST"
-import { RoleType } from "@prisma/client"
+import { RoleType, User } from "@prisma/client"
 
 export class UserUsecase {
     private userRepository: UserRepository
 
     constructor(userRepository: UserRepository) {
         this.userRepository = userRepository
+    }
+
+    async getUser(
+        authUser: AuthUser,
+        params: GetRequestParams
+    ): Promise<User | null> {
+        this.validateGetUserRequest(authUser, params)
+
+        return await this.userRepository.getUser({ username: params.id! })
     }
 
     async createOnboarding(
@@ -32,6 +42,19 @@ export class UserUsecase {
         const id = await this.validateResetOnboardingRequest(authUser, body)
 
         await this.userRepository.resetUserAnswer(id)
+    }
+
+    private validateGetUserRequest(
+        authUser: AuthUser,
+        params: GetRequestParams
+    ): void {
+        if (authUser.role !== RoleType.ADMIN) {
+            throw new AppError("Insufficient Permissions", 403)
+        }
+
+        if (!params.id) {
+            throw new AppError("Invalid get user request", 400)
+        }
     }
 
     private async validateCreateOnboardingRequest(
