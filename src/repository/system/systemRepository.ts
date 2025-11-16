@@ -21,13 +21,13 @@ export class SystemRepository implements ISystemRepository {
     constructor(private prisma: PrismaClient) {}
     
     async getSystemSetting(settingKey: SettingKey): Promise<any | null> {
-        return await prisma.systemSetting.findUnique({
+        return await this.prisma.systemSetting.findUnique({
             where: { setting_key: settingKey }
         })
     }
     
     async getAllSystemSettings(): Promise<any[]> {
-        return await prisma.systemSetting.findMany({
+        return await this.prisma.systemSetting.findMany({
             orderBy: { setting_key: 'asc' }
         })
     }
@@ -36,7 +36,7 @@ export class SystemRepository implements ISystemRepository {
         settingKey: SettingKey, 
         settingValue: string
     ): Promise<any> {
-        return await prisma.systemSetting.upsert({
+        return await this.prisma.systemSetting.upsert({
             where: { setting_key: settingKey },
             update: { 
                 setting_value: settingValue,
@@ -62,15 +62,15 @@ export class SystemRepository implements ISystemRepository {
     }
     
     async getUserWithRole(userId: string): Promise<any | null> {
-        return await prisma.user.findUnique({
+        return await this.prisma.user.findUnique({
             where: { id: userId },
         })
     }
     
     private getDefaultDescription(settingKey: SettingKey): string {
         const descriptions: Record<SettingKey, string> = {
-            "junior_login_enabled": "สวิตช์เปิด/ปิดระบบสำหรับน้องค่าย", 
-            "senior_login_enabled": "สวิตช์เปิด/ปิดระบบสำหรับพี่ค่าย",
+            "junior_login_enabled": "การเปิด/ปิดระบบสำหรับน้องค่าย", 
+            "senior_login_enabled": "การเปิด/ปิดระบบสำหรับพี่ค่าย",
             "gift_hourly_quota": "จำนวนครั้งที่ส่งของขวัญได้ต่อชั่วโมง"
         }
         return descriptions[settingKey] || ""

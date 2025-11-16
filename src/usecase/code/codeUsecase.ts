@@ -68,7 +68,6 @@ export class CodeUsecase implements ICodeUsecase {
             throw new AppError("Expiration date must be in the future", 400)
         }
 
-        // สร้าง code
         const code = await this.codeRepository.createCode({
             codeString: codeString,
             targetRole: data.targetRole,
