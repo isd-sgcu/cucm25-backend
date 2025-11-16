@@ -68,38 +68,13 @@ model Wallet {
     @@map("wallets")
 }
 
-model Question {
-    id            String              @id
-    title         String
-    role          RoleType
-    created_at    DateTime         @default(now()) @db.Timestamptz()
-    options       QuestionOption[]
-    answers       UserAnswer[]
-
-    @@map("questions")
-}
-
-model QuestionOption {
-    id          Int          @id @default(autoincrement())
-    question_id String
-    option_text String       
-    created_at    DateTime   @default(now()) @db.Timestamptz()
-    question    Question     @relation(fields: [question_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-    userAnswers UserAnswer[]
-
-    @@index([question_id, option_text])
-    @@map("question_options")
-}
-
 model UserAnswer {
-    user_id            String         @db.Uuid
-    question_id        String
-    selected_option_id Int
-    answered_at        DateTime       @default(now()) @db.Timestamptz()
-    question           Question       @relation(fields: [question_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-    selectedOption     QuestionOption @relation(fields: [selected_option_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-    user               User           @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+    userId     String   @map("user_id") @db.Uuid
+    questionId String   @map("question_id")
+    answer     String
+    answeredAt DateTime @default(now()) @map("answered_at") @db.Timestamptz()
+    user       User     @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
-    @@id([user_id, question_id])
+    @@id([userId, questionId])
     @@map("user_answers")
 }

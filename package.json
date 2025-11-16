@@ -6,11 +6,7 @@
     "scripts": {
         "dev": "nodemon --exec \"ts-node -r tsconfig-paths/register src/app.ts\"",
         "test": "jest",
-        "test:watch": "jest --watch",
-        "seed": "ts-node prisma/seed.ts"
-    },
-    "prisma": {
-        "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
+        "test:watch": "jest --watch"
     },
     "repository": {
         "type": "git",
