@@ -20,6 +20,7 @@ export default function userRouter() {
         authMiddleware,
         userController.reset.bind(userController)
     )
+    router.get("/:id", authMiddleware, userController.get.bind(userController))
 
     return router
 }
