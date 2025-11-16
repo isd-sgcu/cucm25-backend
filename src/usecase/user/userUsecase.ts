@@ -4,7 +4,7 @@ import { AppError } from "@/types/error/AppError"
 import type { GetRequestParams } from "@/types/user/GET"
 import type {
     CreateOnboardingRequest,
-    ResetOnboardingReqeust,
+    ResetOnboardingRequest,
 } from "@/types/user/POST"
 import { RoleType, User } from "@prisma/client"
 
@@ -38,7 +38,7 @@ export class UserUsecase {
         )
     }
 
-    async resetOnboarding(authUser: AuthUser, body: ResetOnboardingReqeust) {
+    async resetOnboarding(authUser: AuthUser, body: ResetOnboardingRequest) {
         const id = await this.validateResetOnboardingRequest(authUser, body)
 
         await this.userRepository.resetUserAnswer(id)
@@ -96,7 +96,7 @@ export class UserUsecase {
 
     private async validateResetOnboardingRequest(
         authUser: AuthUser,
-        body: ResetOnboardingReqeust
+        body: ResetOnboardingRequest
     ): Promise<string> {
         if (authUser.role !== RoleType.ADMIN) {
             throw new AppError("Insufficient Permissions", 403)
