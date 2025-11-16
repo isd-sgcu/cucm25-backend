@@ -174,7 +174,7 @@ export class GiftUsecase {
 			ok = false;
 		}
 
-		if (!checkSenderBalance(senderData, numberAmount ?? 0)) {
+		if (!checkSenderBalance(senderData, numberAmount)) {
 			console.warn(
 				`Unable to send gift for ${sender.username}: Sender doesn't have enough currency.`
 			);
