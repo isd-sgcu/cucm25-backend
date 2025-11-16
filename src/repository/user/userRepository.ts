@@ -27,11 +27,11 @@ export class UserRepository {
         })
     }
 
-    async getUserById(id: string): Promise<User | null> {
+    async getUser(
+        input: Partial<Pick<User, "id" | "username">>
+    ): Promise<User | null> {
         const user = await prisma.user.findFirst({
-            where: {
-                id: id,
-            },
+            where: input,
             include: {
                 wallets: {
                     select: {
