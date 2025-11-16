@@ -1,4 +1,4 @@
-import { EducationLevel, RoleType, User } from "@prisma/client";
+import { EducationLevel, RoleType } from "@prisma/client";
 
 export interface ParsedUser {
 	id: string;
