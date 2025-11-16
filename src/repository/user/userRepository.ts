@@ -88,4 +88,24 @@ export class UserRepository {
             })
         })
     }
+
+    async resetUserAnswer(id: string) {
+        await prisma.$transaction(async (tx) => {
+            await tx.userAnswer.deleteMany({
+                where: {
+                    userId: id,
+                },
+            })
+
+            await tx.user.update({
+                where: {
+                    id: id,
+                },
+                data: {
+                    termsAcceptedAt: null,
+                    isResetUser: true,
+                },
+            })
+        })
+    }
 }

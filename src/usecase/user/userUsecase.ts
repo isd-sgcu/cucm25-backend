@@ -3,6 +3,7 @@ import { AuthUser } from "@/types/auth"
 import { AppError } from "@/types/error/AppError"
 import type {
     CreateOnboardingRequest,
+    ResetOnboardingReqeust,
 } from "@/types/user/POST"
 import { RoleType } from "@prisma/client"
 
@@ -25,6 +26,12 @@ export class UserUsecase {
             body.answers,
             timestamp
         )
+    }
+
+    async resetOnboarding(authUser: AuthUser, body: ResetOnboardingReqeust) {
+        const id = await this.validateResetOnboardingRequest(authUser, body)
+
+        await this.userRepository.resetUserAnswer(id)
     }
 
     private async validateCreateOnboardingRequest(
@@ -62,5 +69,32 @@ export class UserUsecase {
                 400
             )
         }
+    }
+
+    private async validateResetOnboardingRequest(
+        authUser: AuthUser,
+        body: ResetOnboardingReqeust
+    ): Promise<string> {
+        if (authUser.role !== RoleType.ADMIN) {
+            throw new AppError("Insufficient Permissions", 403)
+        }
+
+        if (!body.id) {
+            throw new AppError("Invalid reset user request", 400)
+        }
+
+        const user = await this.userRepository.getUser({ username: body.id })
+        if (!user) {
+            throw new AppError("User does not exist", 404)
+        }
+
+        if (
+            user.role !== RoleType.PARTICIPANT &&
+            user.role !== RoleType.STAFF
+        ) {
+            throw new AppError("Reset is not allowed for this user role", 403)
+        }
+
+        return user.id
     }
 }

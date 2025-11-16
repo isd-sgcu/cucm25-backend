@@ -15,6 +15,11 @@ export default function userRouter() {
         authMiddleware,
         userController.onboarding.bind(userController)
     )
+    router.post(
+        "/reset",
+        authMiddleware,
+        userController.reset.bind(userController)
+    )
 
     return router
 }
