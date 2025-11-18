@@ -3,6 +3,7 @@ import { ParsedUser } from "@/types/user";
 import { TransactionType } from "@prisma/client";
 
 export class TransactionRepository {
+	// 1 exp = 1 coin (they're the same)
 	async create(
 		sender: ParsedUser,
 		recipient: ParsedUser,
