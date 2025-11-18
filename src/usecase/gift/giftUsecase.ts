@@ -42,19 +42,6 @@ function checkSenderLimit(sender: ParsedUser) {
 	return true;
 }
 
-/* This function assumes sender's wallet already exists (this should've already been checked elsewhere.) */
-function checkSenderBalance(sender: ParsedUser, amount: number) {
-	if (!sender.wallets) {
-		return false;
-	}
-
-	if (sender?.wallets.coin_balance < amount) {
-		console.warn("Sender doesn't have enough currency.");
-		return false;
-	}
-	return true;
-}
-
 function checkSenderResetTime(sender: ParsedUser) {
 	if (!sender.wallets) {
 		return false;
