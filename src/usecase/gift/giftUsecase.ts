@@ -95,6 +95,8 @@ export class GiftUsecase {
 			};
 		}
 
+		const errors = [];
+
 		if (checkSenderResetTime(senderData)) {
 			const remaining = senderData.wallets.gift_sends_remaining;
 
@@ -117,6 +119,7 @@ export class GiftUsecase {
 			console.warn(
 				`Unable to send gift for ${sender.username}: Sender and recipient are the same person.`
 			);
+			errors.push("Sender and recipient are the same person");
 			ok = false;
 		}
 
@@ -124,6 +127,7 @@ export class GiftUsecase {
 			console.warn(
 				`Unable to send gift for ${sender.username}: Recipient ${recipientUsername} doesn't exist.`
 			);
+			errors.push("Recipient doesn't exist");
 			ok = false;
 		}
 
@@ -131,13 +135,15 @@ export class GiftUsecase {
 			console.warn(
 				`Unable to send gift for ${sender.username}: Sender ran out of gift quotas.`
 			);
+			errors.push("Sender ran out of gift quotas");
 			ok = false;
 		}
 
 		if (!ok) {
+			const errorMessage = errors.join(", ") + ".";
 			return {
 				statusCode: 400,
-				message: "Unable to send gift.",
+				message: "Unable to send gift: " + errorMessage,
 			};
 		}
 
