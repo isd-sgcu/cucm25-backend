@@ -49,7 +49,7 @@ export class GiftController {
 				});
 				return;
 			}
-			console.error("Error something:", error);
+			console.error("Error sending gift:", error);
 			res.status(500).json({
 				message: "An unexpected error occurred",
 			});
