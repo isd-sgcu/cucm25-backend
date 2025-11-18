@@ -71,7 +71,7 @@ model Wallet {
     user_id              String   @id @db.Uuid
     coin_balance         Int      @default(0)
     current_level        Int      @default(1)
-    gift_sends_remaining Int      @default(5)
+    gift_sends_remaining Int      @default(7)
     updated_at           DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
     last_gift_sent_at    DateTime @default(now()) @db.Timestamptz()
     users                User?
