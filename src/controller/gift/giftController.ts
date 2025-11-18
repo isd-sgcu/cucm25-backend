@@ -33,21 +33,14 @@ export class GiftController {
 			// FIXME: Add data validation
 			const sender = _req.user;
 			const recipient = _req.body.recipient;
-			const amount = _req.body.amount;
 
 			const result: {
 				statusCode: number;
 				message: string;
-				newAmount: number;
-			} = await this.giftUsecase.sendGift(
-				sender as AuthUser,
-				recipient,
-				amount
-			);
+			} = await this.giftUsecase.sendGift(sender as AuthUser, recipient);
 
 			res.status(result.statusCode).json({
 				message: result.message,
-				newAmount: result.newAmount,
 			});
 		} catch (error) {
 			if (error instanceof AppError) {
