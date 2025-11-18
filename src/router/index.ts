@@ -1,10 +1,14 @@
-import { Router } from "express"
-import authRouter from "@/router/authRouter"
+import { Router } from "express";
+// import mockRouter from "@/router/mock";
+import giftRouter from "@/router/giftRouter";
+import authRouter from "@/router/authRouter";
 
 export default function routerManager() {
-    const router = Router()
+	const router = Router();
 
-    router.use("/auth", authRouter())
+	router.use("/gift", giftRouter());
+	// router.use("/mock", mockRouter());
+	router.use("/auth", authRouter());
 
-    return router
+	return router;
 }
