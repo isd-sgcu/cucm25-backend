@@ -76,9 +76,10 @@ export class GiftUsecase {
 		const senderData = await userRepository.getParsedUserById(sender.id);
 
 		if (!senderData?.wallets) {
+			console.error("Sender's wallet not found.");
 			return {
 				statusCode: 400,
-				message: "Sender's wallet doesn't exist???",
+				message: "Sender's wallet not found.",
 			};
 		}
 
