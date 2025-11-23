@@ -86,7 +86,7 @@ export class UserRepository {
 	}
 
 	/**
-	 * Gets a user by username (at the moment its the format of `{n,p}[0-9][0-9][0-9]`)
+	 * Gets a user by username (at the moment it's the format of `{n,p}[0-9][0-9][0-9]`)
 	 * @param {string} username
 	 * @returns The user if one with `username` exists, `null` otherwise.
 	 */
