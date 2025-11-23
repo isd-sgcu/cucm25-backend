@@ -137,6 +137,7 @@ export class UserRepository {
 
 	/**
 	 * Adds to the total coin amount (which is named `current_level` since 1 `level` is 1 `coin`) to the user with `id`'s wallet
+	 * `coin`s can be reduced, but `current_level` can't, so `current_level` acts as a total coin counter.
 	 * @param {string} id The target user's id.
 	 * @param {number} amount The amount to add. Negative numbers are allowed but should not be used unless for exceptional cases.
 	 */
