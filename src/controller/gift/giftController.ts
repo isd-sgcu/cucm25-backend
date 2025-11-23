@@ -10,24 +10,6 @@ export class GiftController {
 		this.giftUsecase = giftUsecase;
 	}
 
-	// async giftPing(_req: Request, res: Response): Promise<void> {
-	// 	try {
-	// 		await this.giftUsecase.pingDB();
-	// 		res.status(200).json({ message: "Gift Rider!" });
-	// 	} catch (error) {
-	// 		if (error instanceof AppError) {
-	// 			res.status(error.statusCode).json({
-	// 				message: error.message,
-	// 			});
-	// 			return;
-	// 		}
-	// 		console.error("Error something:", error);
-	// 		res.status(500).json({
-	// 			message: "An unexpected error occurred",
-	// 		});
-	// 	}
-	// }
-
 	async sendGift(_req: Request, res: Response): Promise<void> {
 		try {
 			// FIXME: Add data validation
