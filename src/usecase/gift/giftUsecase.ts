@@ -148,6 +148,8 @@ export class GiftUsecase {
 		 */
 
 		const timestamp = new Date();
+
+		// TODO: make atomic???
 		await userRepository.addSendingQuota(senderData.id, -1);
 		await userRepository.setLastSendTime(senderData.id, timestamp);
 		await userRepository.addCoinBalance(recipient.id, GIFT_VALUE);
