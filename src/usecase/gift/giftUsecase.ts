@@ -94,7 +94,7 @@ export class GiftUsecase {
 				SENDING_QUOTA - remaining
 			);
 
-			// in the current object
+			// in the current object (TODO: redundant?)
 			senderData.wallets.gift_sends_remaining +=
 				SENDING_QUOTA - remaining;
 
