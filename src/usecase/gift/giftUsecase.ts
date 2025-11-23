@@ -35,7 +35,7 @@ function checkSenderLimit(sender: ParsedUser) {
 	// TODO: Add timestamp checking to see if limit should be reset,
 	// e.g. if the last time gift sent > 3600 then let it pass even if remaining is 0.
 
-	if (sender?.wallets.gift_sends_remaining <= 0) {
+	if (sender.wallets.gift_sends_remaining <= 0) {
 		console.warn("Sender ran out of gift sends in the time period.");
 		return false;
 	}
