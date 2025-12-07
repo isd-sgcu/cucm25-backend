@@ -16,7 +16,7 @@ export async function checkSystemAvailability(
 ): Promise<void> {
     try {
         // Skip check for system endpoints themselves and auth endpoints
-        if (req.path.startsWith('/system/') || req.path.startsWith('/auth/')) {
+        if (req.path.startsWith('/system') || req.path.startsWith('/auth')) {
             next()
             return
         }

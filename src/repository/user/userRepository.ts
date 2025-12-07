@@ -1,10 +1,10 @@
 import { prisma } from "@/lib/prisma"
 import type { OnboardingAnswers, ParsedUser } from "@/types/user"
-import { User } from "@prisma/client"
+import { Prisma, User } from "@prisma/client"
 
 export class UserRepository {
     async create(user: ParsedUser): Promise<void> {
-        return await prisma.$transaction(async (tx: any) => {
+        return await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
             await tx.wallet.create({
                 data: {
                     user_id: user.id,

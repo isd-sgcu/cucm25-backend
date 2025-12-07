@@ -23,14 +23,15 @@ export class CodeController {
                 req.body
 
             // Validation
-            if (
-                !targetRole ||
-                !activityName ||
-                rewardCoin === undefined ||
-                !expiresAt
-            ) {
+            let missingFields = []
+            if (!targetRole) missingFields.push("targetRole")
+            if (!activityName) missingFields.push("activityName")
+            if (rewardCoin === undefined) missingFields.push("rewardCoin")
+            if (!expiresAt) missingFields.push("expiresAt")
+
+            if (missingFields.length > 0) {
                 res.status(400).json({
-                    error: "Missing required fields: targetRole, activityName, rewardCoin, expiresAt",
+                    error: `Missing required fields: ${missingFields.join(", ")}`,
                 })
                 return
             }

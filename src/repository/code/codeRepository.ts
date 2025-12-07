@@ -82,14 +82,20 @@ export class CodeRepository implements ICodeRepository {
             }
         }
 
-        // If all attempts failed, use timestamp-based fallback for guaranteed uniqueness
-        const timestamp = Date.now().toString().slice(-3) // Last 3 digits of timestamp
-        const fallbackCode = `X${timestamp}` // X + 3 digit timestamp
+        // // If all attempts failed, use timestamp-based fallback for guaranteed uniqueness
+        // const timestamp = Date.now().toString().slice(-3) // Last 3 digits of timestamp
+        // const fallbackCode = `X${timestamp}` // X + 3 digit timestamp
+
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+        let fallbackCode = ''
+        for (let i = 0; i < 4; i++) {
+            const idx = randomInt(0, chars.length)
+            fallbackCode += chars.charAt(idx)
+        }
         
         logger.warn("CodeRepository", "Code generation reached max retries, using fallback", {
             maxRetries: MAX_RETRIES,
-            fallbackCode,
-            timestamp
+            fallbackCode
         })
         
         // Check if fallback code already exists (very unlikely)
