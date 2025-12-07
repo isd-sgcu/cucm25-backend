@@ -9,7 +9,17 @@ import { checkSystemAvailability } from "@/middleware/systemCheck"
 const app = express()
 const PORT = 8080
 
-app.use(cors())
+app.use(cors(
+    {
+        origin: [
+            "/^https?:\\/\\/localhost(:[0-9]{1,5})?$/",
+            "/^https?:\\/\\/127\\.0\\.0\\.1(:[0-9]{1,5})?$/",
+            "/^https?:\\/\\/(.+\\.)?cucm25\\.com(:[0-9]{1,5})?$/",
+        ],
+        methods: ["GET", "POST", "PUT", "DELETE"],
+        allowedHeaders: ["Content-Type", "Authorization"],
+    }
+))
 app.use(bodyParser.json())
 app.use(express.urlencoded({ extended: true }))
 
