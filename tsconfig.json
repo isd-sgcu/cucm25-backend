@@ -4,8 +4,7 @@
   "compilerOptions": {
     // File Layout
     "rootDir": "src",
-    // "outDir": "./dist",
-
+    "outDir": "build",
     // Environment Settings
     // See also https://aka.ms/tsconfig/module
     "target": "es2020",
