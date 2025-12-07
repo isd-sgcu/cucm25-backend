@@ -154,4 +154,72 @@ export class UserRepository {
 			},
 		});
 	}
+
+	/**
+	 * Adds coin balance to user with `id`'s wallet.
+	 * @param {string} id The target user's id.
+	 * @param {number} amount The amount to add. Negative numbers (to represent subtracting) are allowed as well.
+	 */
+	async addCoinBalance(id: string, amount: number) {
+		await prisma.user.update({
+			where: { id: id },
+			data: {
+				wallets: {
+					update: {
+						where: {
+							user_id: id,
+						},
+						data: {
+							coin_balance: { increment: amount },
+						},
+					},
+				},
+			},
+		});
+	}
+
+  async getParsedUserById(id: string): Promise<ParsedUser | null> {
+		const user = await prisma.user.findFirst({
+			where: {
+				id: id,
+			},
+			include: {
+				wallets: {
+					select: {
+						coin_balance: true,
+						gift_sends_remaining: true,
+					},
+				},
+			},
+		});
+		if (!user) {
+			return null;
+		}
+		return user;
+	}
+
+  /**
+	 * Gets a user by username (at the moment it's the format of `{n,p}[0-9][0-9][0-9]`)
+	 * @param {string} username
+	 * @returns The user if one with `username` exists, `null` otherwise.
+	 */
+	async getUserByUsername(username: string): Promise<ParsedUser | null> {
+		const user = await prisma.user.findFirst({
+			where: {
+				username: username,
+			},
+			include: {
+				wallets: {
+					select: {
+						coin_balance: true,
+						gift_sends_remaining: true,
+					},
+				},
+			},
+		});
+		if (!user) {
+			return null;
+		}
+		return user;
+	}
 }
