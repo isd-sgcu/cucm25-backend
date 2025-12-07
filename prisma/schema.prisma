@@ -33,14 +33,6 @@ enum EducationLevel {
     GRADUATED
 }
 
-enum TransactionType {
-    GIFT
-    CODE_REDEMPTION
-    CENTRAL_PAYMENT
-    ADMIN_GRANT
-    PEER_TRANSFER
-}
-
 model User {
     id              String         @id @db.Uuid
     studentId       String         @map("student_id")
@@ -59,10 +51,6 @@ model User {
     updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
     createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
 
-    senderTransactions Transaction[]   @relation("SenderTransactions")     // Represents transactions where THIS user is the SENDER
-    recipientTransactions Transaction[] @relation("RecipientTransactions")  // Represents transactions where THIS user is the RECIPIENT
-
-
     @@unique([id])
     @@index([username])
     @@map("users")
@@ -74,7 +62,6 @@ model Wallet {
     cumulative_coin      Int      @default(0)
     gift_sends_remaining Int      @default(5)
     updated_at           DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
-    last_gift_sent_at    DateTime @default(now()) @db.Timestamptz()
     users                User?
 
     @@index([coin_balance])
