@@ -1,12 +1,12 @@
 import { Router } from "express";
-import giftRouter from "@/router/giftRouter";
 import authRouter from "@/router/authRouter";
+import userRouter from "@/router/userRouter";
 
 export default function routerManager() {
 	const router = Router();
 
-	router.use("/gift", giftRouter());
 	router.use("/auth", authRouter());
+	router.use("/user", userRouter());
 
 	return router;
 }

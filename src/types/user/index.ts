@@ -17,3 +17,8 @@ export interface ParsedUser {
 		last_gift_sent_at: Date;
 	};
 }
+
+export type OnboardingAnswers = Array<{
+	questionId: string;
+	optionText: string;
+}>;

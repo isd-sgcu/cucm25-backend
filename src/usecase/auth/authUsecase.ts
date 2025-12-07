@@ -31,7 +31,10 @@ export class AuthUsecase {
     }
 
     async getUser(authUser: AuthUser): Promise<User | null> {
-        return await this.userRepository.getUserById(authUser.id)
+        return await this.userRepository.getUser({
+            id: authUser.id,
+            username: authUser.username,
+        })
     }
 
     async getKeycloakUser(body: LoginRequest): Promise<KeycloakUser> {
