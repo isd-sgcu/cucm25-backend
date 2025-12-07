@@ -3,6 +3,7 @@ import { UserRepository } from "@/repository/user/userRepository";
 import { TransactionRepository } from "@/repository/transaction/transactionRepository";
 import { AuthUser } from "@/types/auth";
 import { ParsedUser } from "@/types/user";
+import { Wallet } from "@prisma/client";
 
 const SENDING_QUOTA = 7;
 const GIFT_VALUE = 100;
@@ -42,22 +43,6 @@ function checkSenderLimit(sender: ParsedUser) {
 	return true;
 }
 
-function checkSenderResetTime(sender: ParsedUser) {
-	if (!sender.wallets) {
-		return false;
-	}
-
-	const resetTime = new Date(sender.wallets.last_gift_sent_at);
-
-	resetTime.setHours(resetTime.getHours() + 1);
-	resetTime.setMinutes(0);
-	resetTime.setSeconds(0);
-	resetTime.setMilliseconds(0);
-
-	const now = new Date().getTime();
-	return now >= resetTime.getTime();
-}
-
 export class GiftUsecase {
 	private giftRepository: GiftRepository;
 
@@ -75,6 +60,9 @@ export class GiftUsecase {
 		const userRepository = new UserRepository();
 		const senderData = await userRepository.getParsedUserById(sender.id);
 
+		const recipient =
+			await userRepository.getUserByUsername(recipientUsername);
+
 		if (!senderData?.wallets) {
 			console.error("Sender's wallet not found.");
 			return {
@@ -83,25 +71,15 @@ export class GiftUsecase {
 			};
 		}
 
-		const errors = [];
-
-		if (checkSenderResetTime(senderData)) {
-			const remaining = senderData.wallets.gift_sends_remaining;
-
-			// in the database
-			await userRepository.addSendingQuota(
-				senderData.id,
-				SENDING_QUOTA - remaining
-			);
-
-			// in the current object (TODO: redundant?)
-			senderData.wallets.gift_sends_remaining +=
-				SENDING_QUOTA - remaining;
-
-			console.log(
-				`Reset ${senderData.id}'s sending quota to ${SENDING_QUOTA}, as it has been more than 3600000 milliseconds after the last gift sending.`
-			);
+		if (!recipient) {
+			console.error("Recipient not found.");
+			return {
+				statusCode: 400,
+				message: "Recipient not found.",
+			};
 		}
+
+		const errors = [];
 
 		if (sender.username === recipientUsername) {
 			console.warn(
@@ -135,10 +113,6 @@ export class GiftUsecase {
 			};
 		}
 
-		const recipient = (await userRepository.getUserByUsername(
-			recipientUsername
-		)) as ParsedUser;
-
 		/**
 		 * Actually send the gift:
 		 * - Deduct 1 from the sender's quota
@@ -151,7 +125,7 @@ export class GiftUsecase {
 
 		// TODO: make atomic???
 		await userRepository.addSendingQuota(senderData.id, -1);
-		await userRepository.setLastSendTime(senderData.id, timestamp);
+		// await userRepository.setLastSendTime(senderData.id, timestamp);
 		await userRepository.addCoinBalance(recipient.id, GIFT_VALUE);
 		await userRepository.addTotalCoinAmount(recipient.id, GIFT_VALUE);
 		console.log(
