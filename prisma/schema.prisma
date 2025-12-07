@@ -46,23 +46,35 @@ model User {
     isResetUser     Boolean        @default(false) @map("is_reset_user")
     termsAcceptedAt DateTime?      @map("terms_accepted_at") @db.Timestamptz()
     wallets         Wallet         @relation(fields: [id], references: [user_id], onDelete: NoAction, onUpdate: NoAction, map: "users_id_fkey1")
+    answers         UserAnswer[]
 
     updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
     createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
 
     @@unique([id])
-    @@index([id])
+    @@index([username])
     @@map("users")
 }
 
 model Wallet {
     user_id              String   @id @db.Uuid
     coin_balance         Int      @default(0)
-    current_level        Int      @default(1)
+    cumulative_coin      Int      @default(0)
     gift_sends_remaining Int      @default(5)
     updated_at           DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
     users                User?
 
     @@index([coin_balance])
     @@map("wallets")
+}
+
+model UserAnswer {
+    userId     String   @map("user_id") @db.Uuid
+    questionId String   @map("question_id")
+    answer     String
+    answeredAt DateTime @default(now()) @map("answered_at") @db.Timestamptz()
+    user       User     @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+    @@id([userId, questionId])
+    @@map("user_answers")
 }
