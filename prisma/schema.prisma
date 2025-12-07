@@ -41,25 +41,26 @@ model User {
     termsAcceptedAt DateTime?      @map("terms_accepted_at") @db.Timestamptz()
     
     // Relations
-    wallet              Wallet?           @relation(fields: [id], references: [user_id], onDelete: NoAction, onUpdate: NoAction, map: "users_id_fkey1")
+    wallets         Wallet         @relation(fields: [id], references: [user_id], onDelete: NoAction, onUpdate: NoAction, map: "users_id_fkey1")
+    answers         UserAnswer[]
+
     createdCodes        Code[]            @relation("CodeCreator")
     codeRedemptions     CodeRedemption[]  @relation("UserRedemptions")
     sentTransactions    Transaction[]     @relation("TransactionSender")
     receivedTransactions Transaction[]    @relation("TransactionRecipient")
-    userAnswers         UserAnswer[]
 
     updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
     createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
 
     @@unique([id])
-    @@index([id])
+    @@index([id, username])
     @@map("users")
 }
 
 model Wallet {
     user_id              String   @id @db.Uuid
     coin_balance         Int      @default(0)
-    current_level        Int      @default(1)
+    cumulative_coin      Int      @default(0)
     gift_sends_remaining Int      @default(5)
     updated_at           DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
     users                User?
@@ -116,42 +117,15 @@ model Transaction {
   @@map("transactions")
 }
 
-model Question {
-  id                Int              @id @default(autoincrement())
-  question_text     String
-  question_for_role String           @db.VarChar(50)
-  display_order     Int?
-  created_at        DateTime?        @default(now()) @db.Timestamp(6)
-  options           QuestionOption[]
-  answers           UserAnswer[]
-
-  @@map("questions")
-}
-
-model QuestionOption {
-  id          Int          @id @default(autoincrement())
-  question_id Int
-  option_text String       @db.VarChar
-  created_at  DateTime?    @default(now()) @db.Timestamp(6)
-  question    Question     @relation(fields: [question_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  userAnswers UserAnswer[]
-
-  @@map("question_options")
-}
-
 model UserAnswer {
-  user_id            String         @db.Uuid
-  question_id        Int
-  selected_option_id Int
-  answered_at        DateTime?      @default(now()) @db.Timestamp(6)
-  
-  // Relations
-  question           Question       @relation(fields: [question_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  selectedOption     QuestionOption @relation(fields: [selected_option_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  user               User           @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+    userId     String   @map("user_id") @db.Uuid
+    questionId String   @map("question_id")
+    answer     String
+    answeredAt DateTime @default(now()) @map("answered_at") @db.Timestamptz()
+    user       User     @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
-  @@id([user_id, question_id])
-  @@map("user_answers")
+    @@id([userId, questionId])
+    @@map("user_answers")
 }
 
 model SystemSetting {

@@ -1,3 +1,6 @@
+-- DropIndex
+DROP INDEX "public"."users_username_idx";
+
 -- CreateTable
 CREATE TABLE "codes" (
     "id" SERIAL NOT NULL,
@@ -35,37 +38,6 @@ CREATE TABLE "transactions" (
 );
 
 -- CreateTable
-CREATE TABLE "questions" (
-    "id" SERIAL NOT NULL,
-    "question_text" TEXT NOT NULL,
-    "question_for_role" VARCHAR(50) NOT NULL,
-    "display_order" INTEGER,
-    "created_at" TIMESTAMP(6) DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "questions_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "question_options" (
-    "id" SERIAL NOT NULL,
-    "question_id" INTEGER NOT NULL,
-    "option_text" VARCHAR NOT NULL,
-    "created_at" TIMESTAMP(6) DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "question_options_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "user_answers" (
-    "user_id" UUID NOT NULL,
-    "question_id" INTEGER NOT NULL,
-    "selected_option_id" INTEGER NOT NULL,
-    "answered_at" TIMESTAMP(6) DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "user_answers_pkey" PRIMARY KEY ("user_id","question_id")
-);
-
--- CreateTable
 CREATE TABLE "system_settings" (
     "setting_key" VARCHAR(100) NOT NULL,
     "setting_value" TEXT,
@@ -77,6 +49,9 @@ CREATE TABLE "system_settings" (
 
 -- CreateIndex
 CREATE UNIQUE INDEX "codes_code_string_key" ON "codes"("code_string");
+
+-- CreateIndex
+CREATE INDEX "users_id_username_idx" ON "users"("id", "username");
 
 -- AddForeignKey
 ALTER TABLE "codes" ADD CONSTRAINT "codes_created_by_user_id_fkey" FOREIGN KEY ("created_by_user_id") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
@@ -95,15 +70,3 @@ ALTER TABLE "transactions" ADD CONSTRAINT "transactions_related_code_id_fkey" FO
 
 -- AddForeignKey
 ALTER TABLE "transactions" ADD CONSTRAINT "transactions_sender_user_id_fkey" FOREIGN KEY ("sender_user_id") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
-
--- AddForeignKey
-ALTER TABLE "question_options" ADD CONSTRAINT "question_options_question_id_fkey" FOREIGN KEY ("question_id") REFERENCES "questions"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
-
--- AddForeignKey
-ALTER TABLE "user_answers" ADD CONSTRAINT "user_answers_question_id_fkey" FOREIGN KEY ("question_id") REFERENCES "questions"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
-
--- AddForeignKey
-ALTER TABLE "user_answers" ADD CONSTRAINT "user_answers_selected_option_id_fkey" FOREIGN KEY ("selected_option_id") REFERENCES "question_options"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
-
--- AddForeignKey
-ALTER TABLE "user_answers" ADD CONSTRAINT "user_answers_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;

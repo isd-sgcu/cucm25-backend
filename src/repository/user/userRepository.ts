@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma"
-import type { ParsedUser } from "@/types/user"
+import type { OnboardingAnswers, ParsedUser } from "@/types/user"
 import { User } from "@prisma/client"
 
 export class UserRepository {
@@ -27,22 +27,22 @@ export class UserRepository {
         })
     }
 
-    async getUserById(id: string): Promise<User | null> {
+    async getUser(
+        input: Partial<Pick<User, "id" | "username">>
+    ): Promise<User | null> {
         const user = await prisma.user.findFirst({
-            where: {
-                id: id,
-            },
+            where: input,
             include: {
-                wallet: {
+                wallets: {
                     select: {
                         coin_balance: true,
-                        current_level: true,
+                        cumulative_coin: true,
                         gift_sends_remaining: true,
                     },
                 },
             },
         })
-        if (!user) {    
+        if (!user) {
             return null
         }
         return user
@@ -60,5 +60,52 @@ export class UserRepository {
             return true
         }
         return false
+    }
+
+    async createUserAnswer(
+        id: string,
+        body: OnboardingAnswers,
+        timestamp: Date
+    ): Promise<void> {
+        await prisma.$transaction(async (tx) => {
+            await tx.userAnswer.createMany({
+                data: body.map((answer) => ({
+                    userId: id,
+                    questionId: answer.questionId,
+                    answer: answer.optionText,
+                    answeredAt: timestamp,
+                })),
+            })
+
+            await tx.user.update({
+                where: {
+                    id: id,
+                },
+                data: {
+                    termsAcceptedAt: timestamp,
+                    isResetUser: false,
+                },
+            })
+        })
+    }
+
+    async resetUserAnswer(id: string) {
+        await prisma.$transaction(async (tx) => {
+            await tx.userAnswer.deleteMany({
+                where: {
+                    userId: id,
+                },
+            })
+
+            await tx.user.update({
+                where: {
+                    id: id,
+                },
+                data: {
+                    termsAcceptedAt: null,
+                    isResetUser: true,
+                },
+            })
+        })
     }
 }

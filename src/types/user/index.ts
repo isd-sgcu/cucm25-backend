@@ -1,4 +1,4 @@
-import { EducationLevel, RoleType, User } from "@prisma/client"
+import { EducationLevel, RoleType } from "@prisma/client"
 
 export interface ParsedUser {
     id: string
@@ -11,3 +11,8 @@ export interface ParsedUser {
     educationLevel: EducationLevel
     school: string
 }
+
+export type OnboardingAnswers = Array<{
+    questionId: string
+    optionText: string
+}>
