@@ -1,7 +1,7 @@
 import { Router } from "express"
 import authRouter from "@/router/authRouter"
 import codeRouter from "@/router/code"
-import giftRouter from "@/router/code"
+import giftRouter from "@/router/giftRouter"
 import systemRouter from "@/router/system"
 import userRouter from "@/router/userRouter"
 
