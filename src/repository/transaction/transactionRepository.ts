@@ -1,6 +1,5 @@
 import { prisma } from "@/lib/prisma";
 import { ParsedUser } from "@/types/user";
-import { TransactionType } from "@prisma/client";
 
 export class TransactionRepository {
 	// 1 exp is 1 current_level = 1 coin (they're the same)
@@ -14,9 +13,8 @@ export class TransactionRepository {
 				data: {
 					sender_user_id: sender.id,
 					recipient_user_id: recipient.id,
-					type: TransactionType.GIFT,
+					type: "GIFT",
 					coin_amount: amount,
-					exp_amount: amount,
 				},
 			});
 		});
