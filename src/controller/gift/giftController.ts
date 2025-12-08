@@ -19,7 +19,7 @@ export class GiftController {
 			const result: {
 				statusCode: number;
 				message: string;
-			} = await this.giftUsecase.sendGift(sender as AuthUser, recipient);
+			} = await this.giftUsecase.sendGift(sender, recipient);
 
 			res.status(result.statusCode).json({
 				message: result.message,
