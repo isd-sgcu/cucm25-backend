@@ -9,23 +9,23 @@ import { prisma } from "@/lib/prisma";
 
 export class GiftUsecase {
 	private giftRepository: GiftRepository;
+	private userRepository: UserRepository;
 
 	constructor(giftRepository: GiftRepository) {
 		this.giftRepository = giftRepository;
+		this.userRepository = new UserRepository();
 	}
 
 	async sendGift(
 		sender: AuthUser | undefined,
 		target: string
 	): Promise<{ statusCode: number; message: string }> {
-		// TODO: Okay maybe I need someone to look at best practices for this pattern. -mistertfy64 2025-12-08 16:53
-		// Copilot said that I shouldn't create another repository inside this
-		const userRepository = new UserRepository();
-
-		const senderData = await userRepository.getParsedUserById(
+		const senderData = await this.userRepository.getParsedUserById(
 			sender?.id || ""
 		);
-		const recipientData = await userRepository.getUserByUsername(target);
+		const recipientData = await this.userRepository.getUserByUsername(
+			target
+		);
 
 		this.validateGiftSend(senderData, recipientData);
 
