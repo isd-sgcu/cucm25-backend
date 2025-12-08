@@ -1,44 +1,11 @@
 import { GiftRepository } from "@/repository/gift/giftRepository";
 import { UserRepository } from "@/repository/user/userRepository";
-import { TransactionRepository } from "@/repository/transaction/transactionRepository";
 import { AuthUser } from "@/types/auth";
 import { ParsedUser } from "@/types/user";
 import { GIFT_SYSTEM } from "@/constant/systemConfig";
-
-async function checkRecipientExistence(username: string | null) {
-	if (!username) {
-		console.warn("Recipient doesn't actually exist.");
-		return false;
-	}
-
-	const userRepository = new UserRepository();
-	// TODO: Unnecessary extra call just to check for existence.
-	const recipient = await userRepository.getUserByUsername(username);
-
-	if (!recipient) {
-		console.warn("Recipient doesn't actually exist.");
-		return false;
-	}
-
-	return true;
-}
-
-/* This function assumes sender already exists (this should've already been checked elsewhere.) */
-/* This function assumes sender's wallet already exists (this should've already been checked elsewhere.) */
-function checkSenderLimit(sender: ParsedUser) {
-	if (!sender.wallets) {
-		return false;
-	}
-
-	// TODO: Add timestamp checking to see if limit should be reset,
-	// e.g. if the last time gift sent > 3600 then let it pass even if remaining is 0.
-
-	if (sender.wallets.gift_sends_remaining <= 0) {
-		console.warn("Sender ran out of gift sends in the time period.");
-		return false;
-	}
-	return true;
-}
+import { AppError } from "@/types/error/AppError";
+import { logger } from "@/utils/logger";
+import { prisma } from "@/lib/prisma";
 
 export class GiftUsecase {
 	private giftRepository: GiftRepository;
@@ -49,72 +16,21 @@ export class GiftUsecase {
 
 	// TODO: Separate checking logic from actual sending logic?
 	async sendGift(
-		sender: AuthUser,
-		recipientUsername: string
+		sender: AuthUser | undefined,
+		target: string
 	): Promise<{ statusCode: number; message: string }> {
-		let ok = true;
-
 		const userRepository = new UserRepository();
-		const senderData = await userRepository.getParsedUserById(sender.id);
 
-		const recipient = await userRepository.getUserByUsername(
-			recipientUsername
+		const senderData = await userRepository.getParsedUserById(
+			sender?.id || ""
 		);
+		const recipientData = await userRepository.getUserByUsername(target);
 
-		if (!senderData?.wallets) {
-			console.error("Sender's wallet not found.");
-			return {
-				statusCode: 400,
-				message: "Sender's wallet not found.",
-			};
-		}
-
-		if (!recipient) {
-			console.error("Recipient not found.");
-			return {
-				statusCode: 400,
-				message: "Recipient not found.",
-			};
-		}
-
-		const errors = [];
-
-		if (sender.username === recipientUsername) {
-			console.warn(
-				`Unable to send gift for ${sender.username}: Sender and recipient are the same person.`
-			);
-			errors.push("Sender and recipient are the same person");
-			ok = false;
-		}
-
-		if (!(await checkRecipientExistence(recipientUsername))) {
-			console.warn(
-				`Unable to send gift for ${sender.username}: Recipient ${recipientUsername} doesn't exist.`
-			);
-			errors.push("Recipient doesn't exist");
-			ok = false;
-		}
-
-		if (!checkSenderLimit(senderData)) {
-			console.warn(
-				`Unable to send gift for ${sender.username}: Sender ran out of gift quotas.`
-			);
-			errors.push("Sender ran out of gift quotas");
-			ok = false;
-		}
-
-		if (!ok) {
-			const errorMessage = errors.join(", ") + ".";
-			return {
-				statusCode: 400,
-				message: "Unable to send gift: " + errorMessage,
-			};
-		}
+		this.validateGiftSend(senderData, recipientData);
 
 		/**
 		 * Actually send the gift:
 		 * - Deduct 1 from the sender's quota
-		 * - Set the timestamp of the last gift send to this time.
 		 * - Add 100 currency to `recipient`'s wallet.
 		 * - Log the transaction. // TODO: the `timestamp` variable and the timestamp in the record may be different.
 		 */
@@ -122,23 +38,85 @@ export class GiftUsecase {
 		const timestamp = new Date();
 		const amount = GIFT_SYSTEM.DEFAULT_VALUE;
 
-		// TODO: make atomic???
-		await userRepository.addSendingQuota(senderData.id, -1);
-		// await userRepository.setLastSendTime(senderData.id, timestamp);
-		await userRepository.addCoinBalance(recipient.id, amount);
-		await userRepository.addTotalCoinAmount(recipient.id, amount);
-		console.log(
-			`${senderData.username} successfully sent 1 gift to ${
-				recipient.username
-			} at ${timestamp.toISOString()}.`
-		);
+		const senderId = (senderData as ParsedUser).id;
+		const recipientId = (recipientData as ParsedUser).id;
+		const senderUsername = (senderData as ParsedUser).username;
+		const recipientUsername = (recipientData as ParsedUser).username;
 
-		const transactionRepository = new TransactionRepository();
-		await transactionRepository.create(senderData, recipient, amount);
+		await prisma.$transaction(async (tx) => {
+			// Deduct 1 from the sender's quota
+			await tx.user.update({
+				where: { id: senderId },
+				data: {
+					wallets: {
+						update: {
+							where: {
+								user_id: senderId,
+							},
+							data: {
+								gift_sends_remaining: { increment: -1 },
+							},
+						},
+					},
+				},
+			});
+			// Add 100 to `recipient`'s wallet
+			await tx.user.update({
+				where: { id: recipientId },
+				data: {
+					wallets: {
+						update: {
+							where: {
+								user_id: recipientId,
+							},
+							data: {
+								coin_balance: {
+									increment: GIFT_SYSTEM.DEFAULT_VALUE,
+								},
+								cumulative_coin: {
+									increment: GIFT_SYSTEM.DEFAULT_VALUE,
+								},
+							},
+						},
+					},
+				},
+			});
+			await tx.transaction.create({
+				data: {
+					sender_user_id: senderId,
+					recipient_user_id: recipientId,
+					type: "GIFT",
+					coin_amount: amount,
+				},
+			});
+		});
+
+		logger.info(
+			"GiftUsecase",
+			`${senderUsername} successfully sent 1 gift to ${recipientUsername} at ${timestamp.toISOString()}.`
+		);
 
 		return {
 			statusCode: 200,
 			message: "Gift successfully sent!",
 		};
+	}
+
+	private validateGiftSend(
+		sender: ParsedUser | null,
+		recipient: ParsedUser | null
+	) {
+		if (!sender || !sender.wallets) {
+			throw new AppError("Sender account is broken", 500);
+		}
+		if (!recipient) {
+			throw new AppError("Can't find recipient", 404);
+		}
+		if (sender.username === recipient.username) {
+			throw new AppError("Can't send gift to yourself!", 403);
+		}
+		if (sender.wallets.gift_sends_remaining <= 0) {
+			throw new AppError("You ran out of gift sends.", 403);
+		}
 	}
 }
