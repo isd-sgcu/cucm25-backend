@@ -14,7 +14,6 @@ export class GiftUsecase {
 		this.giftRepository = giftRepository;
 	}
 
-	// TODO: Separate checking logic from actual sending logic?
 	async sendGift(
 		sender: AuthUser | undefined,
 		target: string
@@ -34,10 +33,9 @@ export class GiftUsecase {
 		 * Actually send the gift:
 		 * - Deduct 1 from the sender's quota
 		 * - Add 100 currency to `recipient`'s wallet.
-		 * - Log the transaction. // TODO: the `timestamp` variable and the timestamp in the record may be different.
+		 * - Log the transaction.
 		 */
 
-		const timestamp = new Date();
 		const amount = GIFT_SYSTEM.DEFAULT_VALUE;
 
 		const senderId = (senderData as ParsedUser).id;
@@ -95,7 +93,7 @@ export class GiftUsecase {
 
 		logger.info(
 			"GiftUsecase",
-			`${senderUsername} successfully sent 1 gift to ${recipientUsername} at ${timestamp.toISOString()}.`
+			`${senderUsername} successfully sent 1 gift to ${recipientUsername}.`
 		);
 
 		return {
