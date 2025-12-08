@@ -3,9 +3,7 @@ import { UserRepository } from "@/repository/user/userRepository";
 import { TransactionRepository } from "@/repository/transaction/transactionRepository";
 import { AuthUser } from "@/types/auth";
 import { ParsedUser } from "@/types/user";
-import { Wallet } from "@prisma/client";
 
-const SENDING_QUOTA = 7;
 const GIFT_VALUE = 100;
 
 async function checkRecipientExistence(username: string | null) {
@@ -60,8 +58,9 @@ export class GiftUsecase {
 		const userRepository = new UserRepository();
 		const senderData = await userRepository.getParsedUserById(sender.id);
 
-		const recipient =
-			await userRepository.getUserByUsername(recipientUsername);
+		const recipient = await userRepository.getUserByUsername(
+			recipientUsername
+		);
 
 		if (!senderData?.wallets) {
 			console.error("Sender's wallet not found.");
@@ -129,7 +128,9 @@ export class GiftUsecase {
 		await userRepository.addCoinBalance(recipient.id, GIFT_VALUE);
 		await userRepository.addTotalCoinAmount(recipient.id, GIFT_VALUE);
 		console.log(
-			`${senderData.username} successfully sent 1 gift to ${recipient.username} at ${timestamp.toISOString()}.`
+			`${senderData.username} successfully sent 1 gift to ${
+				recipient.username
+			} at ${timestamp.toISOString()}.`
 		);
 
 		const transactionRepository = new TransactionRepository();
