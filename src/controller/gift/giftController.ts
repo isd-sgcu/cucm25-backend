@@ -1,4 +1,3 @@
-import { AuthUser } from "@/types/auth";
 import { AppError } from "@/types/error/AppError";
 import { GiftUsecase } from "@/usecase/gift/giftUsecase";
 import type { Request, Response } from "express";
