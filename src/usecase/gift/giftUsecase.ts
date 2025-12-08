@@ -3,8 +3,7 @@ import { UserRepository } from "@/repository/user/userRepository";
 import { TransactionRepository } from "@/repository/transaction/transactionRepository";
 import { AuthUser } from "@/types/auth";
 import { ParsedUser } from "@/types/user";
-
-const GIFT_VALUE = 100;
+import { GIFT_SYSTEM } from "@/constant/systemConfig";
 
 async function checkRecipientExistence(username: string | null) {
 	if (!username) {
@@ -121,12 +120,13 @@ export class GiftUsecase {
 		 */
 
 		const timestamp = new Date();
+		const amount = GIFT_SYSTEM.DEFAULT_VALUE;
 
 		// TODO: make atomic???
 		await userRepository.addSendingQuota(senderData.id, -1);
 		// await userRepository.setLastSendTime(senderData.id, timestamp);
-		await userRepository.addCoinBalance(recipient.id, GIFT_VALUE);
-		await userRepository.addTotalCoinAmount(recipient.id, GIFT_VALUE);
+		await userRepository.addCoinBalance(recipient.id, amount);
+		await userRepository.addTotalCoinAmount(recipient.id, amount);
 		console.log(
 			`${senderData.username} successfully sent 1 gift to ${
 				recipient.username
@@ -134,7 +134,7 @@ export class GiftUsecase {
 		);
 
 		const transactionRepository = new TransactionRepository();
-		await transactionRepository.create(senderData, recipient, GIFT_VALUE);
+		await transactionRepository.create(senderData, recipient, amount);
 
 		return {
 			statusCode: 200,
