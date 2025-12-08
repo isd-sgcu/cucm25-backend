@@ -1,5 +1,6 @@
 import { AppError } from "@/types/error/AppError";
 import { GiftUsecase } from "@/usecase/gift/giftUsecase";
+import { logger } from "@/utils/logger";
 import type { Request, Response } from "express";
 
 export class GiftController {
@@ -29,7 +30,7 @@ export class GiftController {
 				});
 				return;
 			}
-			console.error("Error sending gift:", error);
+			logger.error("giftController", "Error sending gift:", error);
 			res.status(500).json({
 				message: "An unexpected error occurred",
 			});
