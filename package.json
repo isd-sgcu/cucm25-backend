@@ -21,7 +21,6 @@
     },
     "homepage": "https://github.com/isd-sgcu/cucm25-backend#readme",
     "dependencies": {
-        "@dotenvx/dotenvx": "^1.51.0",
         "@prisma/client": "^6.18.0",
         "body-parser": "^2.2.0",
         "cors": "^2.8.5",
