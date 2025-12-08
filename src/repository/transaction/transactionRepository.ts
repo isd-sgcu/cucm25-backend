@@ -8,15 +8,13 @@ export class TransactionRepository {
 		recipient: ParsedUser,
 		amount: number
 	): Promise<void> {
-		await prisma.$transaction(async (tx) => {
-			await tx.transaction.create({
-				data: {
-					sender_user_id: sender.id,
-					recipient_user_id: recipient.id,
-					type: "GIFT",
-					coin_amount: amount,
-				},
-			});
+		await prisma.transaction.create({
+			data: {
+				sender_user_id: sender.id,
+				recipient_user_id: recipient.id,
+				type: "GIFT",
+				coin_amount: amount,
+			},
 		});
 	}
 }
