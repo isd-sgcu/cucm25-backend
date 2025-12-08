@@ -106,8 +106,11 @@ export class GiftUsecase {
 		sender: ParsedUser | null,
 		recipient: ParsedUser | null
 	) {
-		if (!sender || !sender.wallets) {
-			throw new AppError("Sender account is broken", 500);
+		if (!sender) {
+			throw new AppError("Sender account not found", 500);
+		}
+		if (!sender.wallets) {
+			throw new AppError("Sender wallet not found", 500);
 		}
 		if (!recipient) {
 			throw new AppError("Can't find recipient", 404);
