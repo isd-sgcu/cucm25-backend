@@ -54,7 +54,7 @@ export class GiftUsecase {
 								user_id: senderId,
 							},
 							data: {
-								gift_sends_remaining: { increment: -1 },
+								gift_sends_remaining: { decrement: 1 },
 							},
 						},
 					},
