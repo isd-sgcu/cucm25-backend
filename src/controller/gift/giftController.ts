@@ -12,7 +12,6 @@ export class GiftController {
 
 	async sendGift(_req: Request, res: Response): Promise<void> {
 		try {
-			// FIXME: Add data validation
 			const sender = _req.user;
 			const recipient = _req.body.recipient;
 
