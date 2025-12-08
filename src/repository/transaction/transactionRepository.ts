@@ -1,7 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { AppError } from "@/types/error/AppError";
 import { ParsedUser } from "@/types/user";
-import { receiveMessageOnPort } from "worker_threads";
 
 export class TransactionRepository {
 	// 1 exp is 1 current_level = 1 coin (they're the same)
