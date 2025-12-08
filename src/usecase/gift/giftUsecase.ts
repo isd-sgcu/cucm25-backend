@@ -19,6 +19,8 @@ export class GiftUsecase {
 		sender: AuthUser | undefined,
 		target: string
 	): Promise<{ statusCode: number; message: string }> {
+		// TODO: Okay maybe I need someone to look at best practices for this pattern. -mistertfy64 2025-12-08 16:53
+		// Copilot said that I shouldn't create another repository inside this
 		const userRepository = new UserRepository();
 
 		const senderData = await userRepository.getParsedUserById(
