@@ -113,7 +113,10 @@ export class GiftUsecase {
 			throw new AppError("Sender wallet not found", 500);
 		}
 		if (!recipient) {
-			throw new AppError("Can't find recipient", 404);
+			throw new AppError("Recipient not found", 404);
+		}
+		if (!recipient.wallets) {
+			throw new AppError("Recipient wallet not found", 404);
 		}
 		if (sender.username === recipient.username) {
 			throw new AppError("Can't send gift to yourself!", 403);
