@@ -152,7 +152,7 @@ export class UserRepository {
 
             return {
                 ...fields,
-                cumulative_coin: wallets.cumulative_coin,
+                cumulative_coin: wallets?.cumulative_coin ?? 0,
             }
         })
     }
