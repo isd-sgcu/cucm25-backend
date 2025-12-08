@@ -1,80 +1,120 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
-    provider = "prisma-client-js"
+  provider = "prisma-client-js"
 }
 
 datasource db {
-    provider = "postgresql"
-    url      = env("DATABASE_URL")
-}
-
-enum RoleType {
-    PARTICIPANT
-    STAFF
-    MODERATOR
-    ADMIN
-
-    @@map("role_type")
-}
-
-enum EducationLevel {
-    M4
-    M5
-    M6
-    Y1
-    Y2
-    Y3
-    Y4
-    GRADUATED
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model User {
-    id              String         @id @db.Uuid
-    studentId       String         @map("student_id")
-    username        String
-    nickname        String
-    firstname       String
-    lastname        String
-    role            RoleType
-    educationLevel  EducationLevel @map("education_level")
-    school          String
-    isResetUser     Boolean        @default(false) @map("is_reset_user")
-    termsAcceptedAt DateTime?      @map("terms_accepted_at") @db.Timestamptz()
-    wallets         Wallet         @relation(fields: [id], references: [user_id], onDelete: NoAction, onUpdate: NoAction, map: "users_id_fkey1")
-    answers         UserAnswer[]
+  id                                                 String             @id @unique @db.Uuid
+  studentId                                          String             @map("student_id")
+  username                                           String
+  nickname                                           String
+  firstname                                          String
+  lastname                                           String
+  role                                               RoleType
+  educationLevel                                     EducationLevel     @map("education_level")
+  school                                             String
+  isResetUser                                        Boolean            @default(false) @map("is_reset_user")
+  termsAcceptedAt                                    DateTime?          @map("terms_accepted_at") @db.Timestamptz(6)
+  updatedAt                                          DateTime           @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdAt                                          DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+  code_redemptions                                   code_redemptions[]
+  codes                                              codes[]
+  transactions_transactions_recipient_user_idTousers transactions[]     @relation("transactions_recipient_user_idTousers")
+  transactions_transactions_sender_user_idTousers    transactions[]     @relation("transactions_sender_user_idTousers")
+  answers                                            UserAnswer[]
+  wallets                                            Wallet             @relation(fields: [id], references: [user_id], onDelete: NoAction, onUpdate: NoAction, map: "users_id_fkey1")
 
-    updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
-    createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
-
-    @@unique([id])
-    @@index([username])
-    @@map("users")
+  @@index([id, username])
+  @@map("users")
 }
 
 model Wallet {
-    user_id              String   @id @db.Uuid
-    coin_balance         Int      @default(0)
-    cumulative_coin      Int      @default(0)
-    gift_sends_remaining Int      @default(5)
-    updated_at           DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
-    users                User?
+  user_id              String   @id @db.Uuid
+  coin_balance         Int      @default(0)
+  gift_sends_remaining Int      @default(5)
+  updated_at           DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  cumulative_coin      Int      @default(0)
+  users                User?
 
-    @@index([coin_balance])
-    @@map("wallets")
+  @@index([coin_balance])
+  @@map("wallets")
 }
 
 model UserAnswer {
-    userId     String   @map("user_id") @db.Uuid
-    questionId String   @map("question_id")
-    answer     String
-    answeredAt DateTime @default(now()) @map("answered_at") @db.Timestamptz()
-    user       User     @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  userId     String   @map("user_id") @db.Uuid
+  questionId String   @map("question_id")
+  answer     String
+  answeredAt DateTime @default(now()) @map("answered_at") @db.Timestamptz(6)
+  user       User     @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
-    @@id([userId, questionId])
-    @@map("user_answers")
+  @@id([userId, questionId])
+  @@map("user_answers")
+}
+
+model code_redemptions {
+  user_id     String    @db.Uuid
+  code_id     Int
+  redeemed_at DateTime? @default(now()) @db.Timestamp(6)
+  codes       codes     @relation(fields: [code_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users       User      @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([user_id, code_id])
+}
+
+model codes {
+  id                 Int                @id @default(autoincrement())
+  code_string        String             @unique @db.VarChar(50)
+  target_role        String             @default("junior") @db.VarChar(50)
+  activity_name      String             @db.VarChar(255)
+  reward_coin        Int                @default(0)
+  created_by_user_id String             @db.Uuid
+  expires_at         DateTime?          @db.Timestamp(6)
+  created_at         DateTime?          @default(now()) @db.Timestamp(6)
+  code_redemptions   code_redemptions[]
+  users              User               @relation(fields: [created_by_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  transactions       transactions[]
+}
+
+model system_settings {
+  setting_key   String    @id @db.VarChar(100)
+  setting_value String?
+  description   String?
+  updated_at    DateTime? @default(now()) @db.Timestamp(6)
+}
+
+model transactions {
+  id                                          Int       @id @default(autoincrement())
+  sender_user_id                              String?   @db.Uuid
+  recipient_user_id                           String?   @db.Uuid
+  type                                        String    @db.VarChar(50)
+  coin_amount                                 Int       @default(0)
+  related_code_id                             Int?
+  created_at                                  DateTime? @default(now()) @db.Timestamp(6)
+  users_transactions_recipient_user_idTousers User?     @relation("transactions_recipient_user_idTousers", fields: [recipient_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  codes                                       codes?    @relation(fields: [related_code_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users_transactions_sender_user_idTousers    User?     @relation("transactions_sender_user_idTousers", fields: [sender_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+enum RoleType {
+  PARTICIPANT
+  STAFF
+  MODERATOR
+  ADMIN
+
+  @@map("role_type")
+}
+
+enum EducationLevel {
+  M4
+  M5
+  M6
+  Y1
+  Y2
+  Y3
+  Y4
+  GRADUATED
 }
