@@ -93,7 +93,7 @@ export class GiftUsecase {
 
 		logger.info(
 			"GiftUsecase",
-			`${senderUsername} successfully sent 1 gift to ${recipientUsername}.`
+			`${senderUsername} successfully sent ${amount} coins (as 1 gift) to ${recipientUsername}.`
 		);
 
 		return {
