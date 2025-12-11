@@ -146,7 +146,7 @@ model SystemSetting {
 
 model TicketPurchase {
   id           String   @id @default(uuid()) @db.Uuid
-  event_name   String   @db.VarChar(255)
+  event_name   String?   @db.VarChar(255)
   count        Int
   ticket_price Int
   total_price  Int
