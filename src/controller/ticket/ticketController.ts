@@ -86,7 +86,9 @@ export class TicketController {
 
     try {
       const purchasesResponse = await this.ticketUsecase.getTicketPurchases(
-        req.query as { start_time: string; end_time: string } | { event_name: string },
+        req.query as
+          | { start_time: string; end_time: string }
+          | { event_name: string },
         Boolean(req.query.randomize)
       );
 
@@ -101,7 +103,6 @@ export class TicketController {
           message: "Failed to export tickets",
         });
       }
-
     } catch (error) {
       throw new AppError("Failed to export tickets", 500);
     }
@@ -136,11 +137,16 @@ export class TicketController {
 
     try {
       const fileStream = await this.ticketUsecase.downloadTicketExport(
-        req.query as { start_time: string; end_time: string } | { event_name: string },
+        req.query as
+          | { start_time: string; end_time: string }
+          | { event_name: string },
         Boolean(req.query.randomize)
       );
 
-      res.setHeader("Content-Disposition", "attachment; filename=ticket_purchases.csv");
+      res.setHeader(
+        "Content-Disposition",
+        "attachment; filename=ticket_purchases.csv"
+      );
       res.setHeader("Content-Type", "text/csv");
       fileStream.pipe(res);
     } catch (error) {

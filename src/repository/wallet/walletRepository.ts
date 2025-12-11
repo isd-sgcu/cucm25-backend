@@ -5,7 +5,7 @@ export class WalletRepository {
 
   async getUserWallet(userId: string) {
     return await prisma.wallet.findUnique({
-      where: { user_id: userId }
+      where: { user_id: userId },
     });
   }
 
@@ -14,14 +14,14 @@ export class WalletRepository {
     if (!userWallet || userWallet.coin_balance < amount) {
       throw new Error("Insufficient coin balance");
     }
-    
+
     const wallet = await prisma.wallet.update({
       where: { user_id: userId },
       data: {
         coin_balance: {
-          decrement: amount
-        }
-      }
+          decrement: amount,
+        },
+      },
     });
 
     if (wallet) {
@@ -30,8 +30,8 @@ export class WalletRepository {
           sender_user_id: userId,
           coin_amount: amount,
           type: "SPEND",
-        }
-      })
+        },
+      });
     }
 
     return wallet;
@@ -42,12 +42,12 @@ export class WalletRepository {
       where: { user_id: userId },
       data: {
         coin_balance: {
-          increment: amount
+          increment: amount,
         },
         cumulative_coin: {
-          increment: amount
-        }
-      }
+          increment: amount,
+        },
+      },
     });
   }
 }
