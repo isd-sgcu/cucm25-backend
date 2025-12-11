@@ -164,7 +164,12 @@ export class CodeUsecase implements ICodeUsecase {
             await prisma.wallet.update({
                 where: { user_id: userId },
                 data: {
-                    coin_balance: newBalance,
+                    coin_balance: {
+                        increment: code.reward_coin,
+                    },
+                    cumulative_coin: {
+                        increment: code.reward_coin,
+                    },
                     updated_at: new Date(),
                 },
             })
