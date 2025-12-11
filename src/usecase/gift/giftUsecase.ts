@@ -153,13 +153,13 @@ export class GiftUsecase {
 	}
 
 	private validateGiftSendBody(data: RecipientData) {
-		const USERNAME_REGEX = /^[npNP][0-9]+$/;
+		// const USERNAME_REGEX = /^[npNP][0-9]+$/;
 		if (typeof data.username !== "string") {
 			throw new AppError("Recipient format invalid", 400);
 		}
-		if (!USERNAME_REGEX.test(data.username)) {
-			throw new AppError("Recipient username invalid", 400);
-		}
+		// if (!USERNAME_REGEX.test(data.username)) {
+		// 	throw new AppError("Recipient username invalid", 400);
+		// }
 	}
 
 	private validateRecipientDataAccuracy(
