@@ -1,30 +1,34 @@
 import { prisma } from "@/lib/prisma"
 import type { OnboardingAnswers, ParsedUser } from "@/types/user"
 import { Prisma, User } from "@prisma/client"
+import type { LeaderboardUser } from "@/types/leaderboard"
+import { LeaderboardFilter } from "../../types/leaderboard/index"
 
 export class UserRepository {
     async create(user: ParsedUser): Promise<void> {
-        return await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
-            await tx.wallet.create({
-                data: {
-                    user_id: user.id,
-                },
-            })
+        return await prisma.$transaction(
+            async (tx: Prisma.TransactionClient) => {
+                await tx.wallet.create({
+                    data: {
+                        user_id: user.id,
+                    },
+                })
 
-            await tx.user.create({
-                data: {
-                    id: user.id,
-                    studentId: user.studentId,
-                    username: user.username,
-                    nickname: user.nickname,
-                    firstname: user.firstname,
-                    lastname: user.lastname,
-                    role: user.role,
-                    educationLevel: user.educationLevel,
-                    school: user.school,
-                },
-            })
-        })
+                await tx.user.create({
+                    data: {
+                        id: user.id,
+                        studentId: user.studentId,
+                        username: user.username,
+                        nickname: user.nickname,
+                        firstname: user.firstname,
+                        lastname: user.lastname,
+                        role: user.role,
+                        educationLevel: user.educationLevel,
+                        school: user.school,
+                    },
+                })
+            }
+        )
     }
 
     async getUser(
@@ -106,6 +110,45 @@ export class UserRepository {
                     isResetUser: true,
                 },
             })
+        })
+    }
+
+    async getLeaderboard(
+        filter: LeaderboardFilter
+    ): Promise<Array<LeaderboardUser>> {
+        let leaderboard = await prisma.user.findMany({
+            where: {
+                OR: filter.roles,
+            },
+            select: {
+                nickname: true,
+                role: true,
+                firstname: true,
+                lastname: true,
+                educationLevel: true,
+                wallets: {
+                    select: {
+                        cumulative_coin: true,
+                    },
+                },
+            },
+            orderBy: [
+                {
+                    wallets: {
+                        cumulative_coin: "desc",
+                    },
+                },
+            ],
+            take: filter.limit,
+        })
+
+        return leaderboard.map((user) => {
+            const { wallets, ...fields } = user
+
+            return {
+                ...fields,
+                cumulative_coin: wallets?.cumulative_coin ?? 0,
+            }
         })
     }
 }
