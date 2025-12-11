@@ -18,13 +18,15 @@ export class GiftUsecase {
 
 	async sendGift(
 		sender: AuthUser | undefined,
-		target: string
+		data: { [key: string]: string }
 	): Promise<{ statusCode: number; message: string }> {
+		this.validateGiftSendBody(data);
+
 		const senderData = await this.userRepository.getParsedUserById(
 			sender?.id || ""
 		);
 		const recipientData = await this.userRepository.getUserByUsername(
-			target
+			data?.username || ""
 		);
 
 		this.validateGiftSend(senderData, recipientData);
@@ -123,6 +125,16 @@ export class GiftUsecase {
 		}
 		if (sender.wallets.gift_sends_remaining <= 0) {
 			throw new AppError("You ran out of gift sends.", 403);
+		}
+	}
+
+	private validateGiftSendBody(data: { [key: string]: string }) {
+		const USERNAME_REGEX = /^[npNP][0-9]+$/;
+		if (typeof data.username !== "string") {
+			throw new AppError("Recipient format invalid", 400);
+		}
+		if (!USERNAME_REGEX.test(data.username)) {
+			throw new AppError("Recipient username invalid", 400);
 		}
 	}
 }
