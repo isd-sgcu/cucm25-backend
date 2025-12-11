@@ -14,6 +14,7 @@ export interface ParsedUser {
 		coin_balance: number;
 		gift_sends_remaining: number;
 	};
+	answers?: Array<{ questionId: string; answer: string }>;
 }
 
 export type OnboardingAnswers = Array<{
