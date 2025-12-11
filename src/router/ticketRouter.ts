@@ -1,9 +1,9 @@
-import { TicketController } from "@/controller/ticket/ticketController";
-import { authMiddleware } from "@/middleware/authMiddleware";
-import { TicketRepository } from "@/repository/ticket/ticketRepository";
-import { WalletRepository } from "@/repository/wallet/walletRepository";
-import { TicketUsecase } from "@/usecase/ticket/ticketUsecase";
-import { Router } from "express";
+import { TicketController } from '@/controller/ticket/ticketController';
+import { authMiddleware } from '@/middleware/authMiddleware';
+import { TicketRepository } from '@/repository/ticket/ticketRepository';
+import { WalletRepository } from '@/repository/wallet/walletRepository';
+import { TicketUsecase } from '@/usecase/ticket/ticketUsecase';
+import { Router } from 'express';
 
 export default function ticketRouter() {
   const router = Router();
@@ -12,24 +12,24 @@ export default function ticketRouter() {
   const ticketUsecase = new TicketUsecase(ticketRepository, walletRepository);
   const ticketController = new TicketController(ticketUsecase);
 
-  router.get("/price", ticketController.getPrice.bind(ticketController));
+  router.get('/price', ticketController.getPrice.bind(ticketController));
 
   router.post(
-    "/buy",
+    '/buy',
     authMiddleware,
-    ticketController.buyTicket.bind(ticketController)
+    ticketController.buyTicket.bind(ticketController),
   );
 
   router.get(
-    "/export",
+    '/export',
     authMiddleware,
-    ticketController.exportPurchaseHistory.bind(ticketController)
+    ticketController.exportPurchaseHistory.bind(ticketController),
   );
 
   router.get(
-    "/export/download",
+    '/export/download',
     authMiddleware,
-    ticketController.downloadPurchaseHistory.bind(ticketController)
+    ticketController.downloadPurchaseHistory.bind(ticketController),
   );
 
   return router;

@@ -1,7 +1,7 @@
-import { SYSTEM_DEFAULTS } from "@/constant/systemConfig";
-import { prisma } from "@/lib/prisma";
-import { WalletRepository } from "../wallet/walletRepository";
-import { TicketPurchase } from "@prisma/client";
+import { SYSTEM_DEFAULTS } from '@/constant/systemConfig';
+import { prisma } from '@/lib/prisma';
+import { WalletRepository } from '../wallet/walletRepository';
+import { TicketPurchase } from '@prisma/client';
 
 export class TicketRepository {
   private walletRepository: WalletRepository;
@@ -12,11 +12,11 @@ export class TicketRepository {
 
   async getTicketPrice(): Promise<{ price: number; lastUpdated: Date | null }> {
     const ticket_price = await prisma.systemSetting.findUnique({
-      where: { setting_key: "ticket_price" },
+      where: { setting_key: 'ticket_price' },
     });
     return {
       price: parseInt(
-        ticket_price?.setting_value || SYSTEM_DEFAULTS.TICKET_PRICE
+        ticket_price?.setting_value || SYSTEM_DEFAULTS.TICKET_PRICE,
       ),
       lastUpdated: ticket_price?.updated_at || null,
     };
@@ -25,7 +25,7 @@ export class TicketRepository {
   async buyTickets(
     userId: string,
     quantity: number,
-    event_name?: string
+    event_name?: string,
   ): Promise<{ total: number; purchase_at: Date }> {
     const { price } = await this.getTicketPrice();
     const totalCost = price * quantity;
@@ -48,16 +48,16 @@ export class TicketRepository {
   }
 
   async getTicketPurchases(
-    query: { start_time: string; end_time: string } | { event_name: string }
+    query: { start_time: string; end_time: string } | { event_name: string },
   ): Promise<{ count: number; purchases: (TicketPurchase & { user: any })[] }> {
     const where: any = {};
 
-    if ("start_time" in query && "end_time" in query) {
+    if ('start_time' in query && 'end_time' in query) {
       where.purchase_at = {
         gte: new Date(query.start_time),
         lte: new Date(query.end_time),
       };
-    } else if ("event_name" in query) {
+    } else if ('event_name' in query) {
       where.event_name = query.event_name;
     }
 
@@ -75,7 +75,7 @@ export class TicketRepository {
           },
         },
       },
-      orderBy: { purchase_at: "asc" },
+      orderBy: { purchase_at: 'asc' },
     });
 
     return { count: purchases.length, purchases };
