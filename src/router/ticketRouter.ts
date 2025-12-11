@@ -1,13 +1,15 @@
 import { TicketController } from "@/controller/ticket/ticketController";
 import { authMiddleware } from "@/middleware/authMiddleware";
 import { TicketRepository } from "@/repository/ticket/ticketRepository";
+import { WalletRepository } from "@/repository/wallet/walletRepository";
 import { TicketUsecase } from "@/usecase/ticket/ticketUsecase";
 import { Router } from "express";
 
 export default function ticketRouter() {
   const router = Router();
   const ticketRepository = new TicketRepository();
-  const ticketUsecase = new TicketUsecase(ticketRepository);
+  const walletRepository = new WalletRepository();
+  const ticketUsecase = new TicketUsecase(ticketRepository, walletRepository);
   const ticketController = new TicketController(ticketUsecase);
 
   router.get("/price", ticketController.getPrice.bind(ticketController));

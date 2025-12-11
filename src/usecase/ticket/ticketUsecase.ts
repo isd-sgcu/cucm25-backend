@@ -9,9 +9,9 @@ export class TicketUsecase {
   private ticketRepository: TicketRepository;
   private walletRepository: WalletRepository;
 
-  constructor(ticketRepository: TicketRepository) {
+  constructor(ticketRepository: TicketRepository, walletRepository: WalletRepository) {
     this.ticketRepository = ticketRepository;
-    this.walletRepository = new WalletRepository();
+    this.walletRepository = walletRepository;
   }
 
   async getTicketPrice(): Promise<{
