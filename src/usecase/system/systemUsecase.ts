@@ -42,7 +42,9 @@ export class SystemUsecase implements ISystemUsecase {
             SYSTEM_SETTINGS.JUNIOR_LOGIN_ENABLED as SettingKey,
             SYSTEM_SETTINGS.MOD_LOGIN_ENABLED as SettingKey,
             SYSTEM_SETTINGS.SENIOR_LOGIN_ENABLED as SettingKey,
-            SYSTEM_SETTINGS.GIFT_HOURLY_QUOTA as SettingKey
+            SYSTEM_SETTINGS.GIFT_HOURLY_QUOTA as SettingKey,
+            // FIXME: Uncomment when ticket price setting is implemented
+            // SYSTEM_SETTINGS.TICKET_PRICE as SettingKey
         ]
         
         if (!validKeys.includes(data.settingKey as SettingKey)) {
@@ -88,6 +90,7 @@ export class SystemUsecase implements ISystemUsecase {
             modLoginEnabled: settingsMap.get(SYSTEM_SETTINGS.MOD_LOGIN_ENABLED) === SYSTEM_DEFAULTS.BOOLEAN_ENABLED,
             seniorLoginEnabled: settingsMap.get(SYSTEM_SETTINGS.SENIOR_LOGIN_ENABLED) === SYSTEM_DEFAULTS.BOOLEAN_ENABLED, 
             giftHourlyQuota: parseInt(settingsMap.get(SYSTEM_SETTINGS.GIFT_HOURLY_QUOTA) || SYSTEM_DEFAULTS.GIFT_QUOTA),
+            ticketPrice: parseInt(settingsMap.get(SYSTEM_SETTINGS.TICKET_PRICE) || SYSTEM_DEFAULTS.TICKET_PRICE),
             lastUpdated: lastUpdated.toISOString()
         }
     }

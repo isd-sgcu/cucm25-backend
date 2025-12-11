@@ -17,6 +17,7 @@ export const SYSTEM_SETTINGS = {
     MOD_LOGIN_ENABLED: "mod_login_enabled", 
     SENIOR_LOGIN_ENABLED: "senior_login_enabled",
     GIFT_HOURLY_QUOTA: "gift_hourly_quota",
+    TICKET_PRICE: "ticket_price",
 } as const
 
 // Default System Values
@@ -24,6 +25,7 @@ export const SYSTEM_DEFAULTS = {
     BOOLEAN_ENABLED: "true",
     BOOLEAN_DISABLED: "false",
     GIFT_QUOTA: GIFT_SYSTEM.DEFAULT_HOURLY_QUOTA.toString(),
+    TICKET_PRICE: "10",
 } as const
 
 // User Role Mappings (Database Enum -> Lowercase String)
