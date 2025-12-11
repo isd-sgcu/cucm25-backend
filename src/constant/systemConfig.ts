@@ -9,6 +9,7 @@ export const GIFT_SYSTEM = {
     DISABLED_QUOTA: 0,
     MIN_QUOTA: 0,
     MAX_QUOTA: 1000,
+    DEFAULT_VALUE: 100  
 } as const
 
 // System Settings Keys  
