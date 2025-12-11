@@ -8,3 +8,10 @@ export interface LeaderboardUser {
     educationLevel: EducationLevel
     cumulative_coin: number
 }
+
+export interface LeaderboardFilter {
+    roles: Array<{
+        role: RoleType
+    }>
+    limit: number
+}

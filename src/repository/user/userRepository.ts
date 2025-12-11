@@ -1,7 +1,8 @@
 import { prisma } from "@/lib/prisma"
 import type { OnboardingAnswers, ParsedUser } from "@/types/user"
-import { Prisma, User } from "@prisma/client"
+import { Prisma, RoleType, User } from "@prisma/client"
 import type { LeaderboardUser } from "@/types/leaderboard"
+import { LeaderboardFilter } from "../../types/leaderboard/index"
 
 export class UserRepository {
     async create(user: ParsedUser): Promise<void> {
@@ -112,10 +113,12 @@ export class UserRepository {
         })
     }
 
-    async getLeaderboard(): Promise<Array<LeaderboardUser>> {
+    async getLeaderboard(
+        filter: LeaderboardFilter
+    ): Promise<Array<LeaderboardUser>> {
         let leaderboard = await prisma.user.findMany({
             where: {
-                OR: [{ role: "PARTICIPANT" }, { role: "STAFF" }],
+                OR: filter.roles,
             },
             select: {
                 nickname: true,
@@ -135,16 +138,8 @@ export class UserRepository {
                         cumulative_coin: "desc",
                     },
                 },
-                {
-                    role: "asc", // PARTICIPANT before STAFF (from enum)
-                },
-                {
-                    firstname: "asc",
-                },
-                {
-                    lastname: "asc",
-                },
             ],
+            take: filter.limit,
         })
 
         return leaderboard.map((user) => {

@@ -1,5 +1,5 @@
-import { AuthenticatedRequest } from "@/types/auth/index"
 import { AppError } from "@/types/error/AppError"
+import type { GetLeaderboardRequest } from "@/types/leaderboard/GET"
 import { LeaderboardUsecase } from "@/usecase/leaderboard/leaderboardUsecase"
 import type { Response } from "express"
 
@@ -10,9 +10,11 @@ export class LeaderboardController {
         this.leaderboardUsecase = leaderboardUsecase
     }
 
-    async get(_req: AuthenticatedRequest, res: Response): Promise<void> {
+    async get(req: GetLeaderboardRequest, res: Response): Promise<void> {
         try {
-            const leaderboard = await this.leaderboardUsecase.getLeaderboard()
+            const leaderboard = await this.leaderboardUsecase.getLeaderboard(
+                req.query
+            )
             res.status(200).json({ leaderboard })
         } catch (error) {
             if (error instanceof AppError) {
