@@ -46,13 +46,6 @@ export class TicketUsecase {
         throw new Error("Insufficient coin balance");
       }
 
-      const deductResult = await this.walletRepository.deductCoins(user.id, totalCost);
-      if (!deductResult) {
-        throw new Error("Failed to deduct coins from wallet");
-      }
-
-      // TODO: Add transaction logging here
-
       const { total, purchase_at } = await this.ticketRepository.buyTickets(
         user.id,
         quantity,

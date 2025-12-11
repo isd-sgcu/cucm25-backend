@@ -4,7 +4,11 @@ import { WalletRepository } from "../wallet/walletRepository";
 import { TicketPurchase } from "@prisma/client";
 
 export class TicketRepository {
-  constructor() {}
+  private walletRepository: WalletRepository;
+
+  constructor() {
+    this.walletRepository = new WalletRepository();
+  }
 
   async getTicketPrice(): Promise<{ price: number; lastUpdated: Date | null }> {
     const ticket_price = await prisma.systemSetting.findUnique({
@@ -27,6 +31,8 @@ export class TicketRepository {
     const totalCost = price * quantity;
 
     const time = new Date();
+
+    await this.walletRepository.deductCoins(userId, totalCost);
 
     await prisma.ticketPurchase.create({
       data: {
