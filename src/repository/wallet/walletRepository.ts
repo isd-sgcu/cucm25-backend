@@ -15,24 +15,23 @@ export class WalletRepository {
       throw new Error("Insufficient coin balance");
     }
 
-    const wallet = await prisma.wallet.update({
-      where: { user_id: userId },
-      data: {
-        coin_balance: {
-          decrement: amount,
+    const [wallet] = await prisma.$transaction([
+      prisma.wallet.update({
+        where: { user_id: userId },
+        data: {
+          coin_balance: {
+            decrement: amount,
+          },
         },
-      },
-    });
-
-    if (wallet) {
-      await prisma.transaction.create({
+      }),
+      prisma.transaction.create({
         data: {
           sender_user_id: userId,
           coin_amount: amount,
           type: "SPEND",
         },
-      });
-    }
+      }),
+    ]);
 
     return wallet;
   }
