@@ -48,6 +48,10 @@ export class UserUsecase {
     }
 
     async pay(authUser: AuthUser, amount: number): Promise<void> {
+        if (amount <= 0) {
+            throw new AppError("Invalid amount", 400)
+        }
+        
         await this.walletRepository.deductCoins(authUser.id, amount)
     }
 
