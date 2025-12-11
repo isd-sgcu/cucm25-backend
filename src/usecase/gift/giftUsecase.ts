@@ -6,6 +6,19 @@ import { GIFT_SYSTEM } from "@/constant/systemConfig";
 import { AppError } from "@/types/error/AppError";
 import { logger } from "@/utils/logger";
 import { prisma } from "@/lib/prisma";
+import { Recoverable } from "repl";
+
+type QuestionAnswer = {
+	questionId: string;
+	optionText: string;
+};
+
+type RecipientData = {
+	username: string;
+	nickname: string;
+	educationLevel: string;
+	questionAnswers: Array<QuestionAnswer>;
+};
 
 export class GiftUsecase {
 	private giftRepository: GiftRepository;
@@ -18,18 +31,24 @@ export class GiftUsecase {
 
 	async sendGift(
 		sender: AuthUser | undefined,
-		data: { [key: string]: string }
+		data: RecipientData
 	): Promise<{ statusCode: number; message: string }> {
+		// this validates the input
 		this.validateGiftSendBody(data);
 
 		const senderData = await this.userRepository.getParsedUserById(
 			sender?.id || ""
 		);
 		const recipientData = await this.userRepository.getUserByUsername(
-			data?.username || ""
+			data?.username.toLowerCase() || ""
 		);
 
+		// this validates the fetched data
 		this.validateGiftSend(senderData, recipientData);
+
+		// this validates the recipient info
+		// (icebreaking questions and the such)
+		this.validateRecipientDataAccuracy(data, recipientData);
 
 		/**
 		 * Actually send the gift:
@@ -120,6 +139,9 @@ export class GiftUsecase {
 		if (!recipient.wallets) {
 			throw new AppError("Recipient wallet not found", 404);
 		}
+		if (!recipient.answers) {
+			throw new AppError("Recipient answer data not found", 404);
+		}
 		if (sender.username === recipient.username) {
 			throw new AppError("Can't send gift to yourself!", 403);
 		}
@@ -128,13 +150,65 @@ export class GiftUsecase {
 		}
 	}
 
-	private validateGiftSendBody(data: { [key: string]: string }) {
+	private validateGiftSendBody(data: RecipientData) {
 		const USERNAME_REGEX = /^[npNP][0-9]+$/;
 		if (typeof data.username !== "string") {
 			throw new AppError("Recipient format invalid", 400);
 		}
 		if (!USERNAME_REGEX.test(data.username)) {
 			throw new AppError("Recipient username invalid", 400);
+		}
+	}
+
+	private validateRecipientDataAccuracy(
+		answer: RecipientData,
+		recipientData: ParsedUser | null
+	) {
+		const wrongAnswers: Array<string> = [];
+
+		if (!recipientData) {
+			throw new AppError("Recipient not found", 404);
+		}
+
+		if (!recipientData.answers) {
+			throw new AppError("Recipient answer data not found", 404);
+		}
+
+		// shouldn't go in
+		if (answer.username.toLowerCase() !== recipientData.username) {
+			wrongAnswers.push("Username");
+		}
+
+		if (answer.nickname !== recipientData.nickname) {
+			wrongAnswers.push("Nickname");
+		}
+
+		if (answer.educationLevel !== recipientData.educationLevel) {
+			wrongAnswers.push("Education Level");
+		}
+
+		let number = 0;
+		const recipientAnswers: Map<string, string> = new Map();
+		for (const answer of recipientData.answers) {
+			recipientAnswers.set(answer.questionId, answer.answer);
+		}
+
+		for (const questionAnswer of answer.questionAnswers) {
+			number++;
+			if (
+				questionAnswer.optionText !==
+				recipientAnswers.get(questionAnswer.questionId)
+			) {
+				wrongAnswers.push(`Question #${number}`);
+			}
+		}
+
+		const wrongAnswerList = wrongAnswers.join(", ");
+		if (wrongAnswers.length > 0) {
+			throw new AppError(
+				`Sender gave wrong answer to recipient: ${wrongAnswerList}`,
+				400
+			);
 		}
 	}
 }
