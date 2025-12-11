@@ -1,4 +1,5 @@
 import { UserRepository } from "@/repository/user/userRepository"
+import { WalletRepository } from "@/repository/wallet/walletRepository"
 import { AuthUser } from "@/types/auth"
 import { AppError } from "@/types/error/AppError"
 import type { GetRequestParams } from "@/types/user/GET"
@@ -10,9 +11,11 @@ import { RoleType, User } from "@prisma/client"
 
 export class UserUsecase {
     private userRepository: UserRepository
+    private walletRepository: WalletRepository
 
-    constructor(userRepository: UserRepository) {
+    constructor(userRepository: UserRepository, walletRepository: WalletRepository) {
         this.userRepository = userRepository
+        this.walletRepository = walletRepository
     }
 
     async getUser(
@@ -42,6 +45,14 @@ export class UserUsecase {
         const id = await this.validateResetOnboardingRequest(authUser, body)
 
         await this.userRepository.resetUserAnswer(id)
+    }
+
+    async pay(authUser: AuthUser, amount: number): Promise<void> {
+        if (amount <= 0) {
+            throw new AppError("Invalid amount", 400)
+        }
+        
+        await this.walletRepository.deductCoins(authUser.id, amount)
     }
 
     private validateGetUserRequest(

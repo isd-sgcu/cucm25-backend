@@ -21,6 +21,7 @@
     },
     "homepage": "https://github.com/isd-sgcu/cucm25-backend#readme",
     "dependencies": {
+        "@json2csv/plainjs": "^7.0.6",
         "@prisma/client": "^6.18.0",
         "body-parser": "^2.2.0",
         "cors": "^2.8.5",

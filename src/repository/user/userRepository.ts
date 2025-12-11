@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import type { OnboardingAnswers, ParsedUser } from "@/types/user";
 import { Prisma, User } from "@prisma/client";
+import type { LeaderboardUser } from "@/types/leaderboard"
+import { LeaderboardFilter } from "../../types/leaderboard/index"
 
 export class UserRepository {
 	async create(user: ParsedUser): Promise<void> {
@@ -228,4 +230,43 @@ export class UserRepository {
 		}
 		return user;
 	}
+
+    async getLeaderboard(
+        filter: LeaderboardFilter
+    ): Promise<Array<LeaderboardUser>> {
+        let leaderboard = await prisma.user.findMany({
+            where: {
+                OR: filter.roles,
+            },
+            select: {
+                nickname: true,
+                role: true,
+                firstname: true,
+                lastname: true,
+                educationLevel: true,
+                wallets: {
+                    select: {
+                        cumulative_coin: true,
+                    },
+                },
+            },
+            orderBy: [
+                {
+                    wallets: {
+                        cumulative_coin: "desc",
+                    },
+                },
+            ],
+            take: filter.limit,
+        })
+
+        return leaderboard.map((user) => {
+            const { wallets, ...fields } = user
+
+            return {
+                ...fields,
+                cumulative_coin: wallets?.cumulative_coin ?? 0,
+            }
+        })
+    }
 }

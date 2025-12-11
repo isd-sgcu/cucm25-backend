@@ -64,4 +64,28 @@ export class UserController {
             })
         }
     }
+
+    async pay(req: AuthenticatedRequest, res: Response): Promise<void> {
+        if (!req.user) {
+            throw new AppError("Unauthorized", 401)
+        }
+
+        try {
+            await this.userUsecase.pay(req.user, req.body.amount)
+            res.status(200).json({ success: true, message: "Payment successful" })
+        } catch (error) {
+            if (error instanceof AppError) {
+                res.status(error.statusCode).json({
+                    success: false,
+                    message: error.message,
+                })
+            } else {
+                console.error("Payment error:", error)
+                res.status(500).json({
+                    success: false,
+                    message: "An unexpected error occurred",
+                })
+            }
+        }
+    }
 }
