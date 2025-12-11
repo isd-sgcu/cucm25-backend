@@ -9,7 +9,10 @@ export class TicketUsecase {
   private ticketRepository: TicketRepository;
   private walletRepository: WalletRepository;
 
-  constructor(ticketRepository: TicketRepository, walletRepository: WalletRepository) {
+  constructor(
+    ticketRepository: TicketRepository,
+    walletRepository: WalletRepository
+  ) {
     this.ticketRepository = ticketRepository;
     this.walletRepository = walletRepository;
   }
@@ -68,13 +71,15 @@ export class TicketUsecase {
   ): Promise<{ success: boolean; data?: any }> {
     try {
       const { start_time, end_time, event_name } = query as any;
-    
 
       const { purchases } = await this.ticketRepository.getTicketPurchases(
-        start_time ? { start_time, end_time } : { event_name },
+        start_time ? { start_time, end_time } : { event_name }
       );
 
-      const sanitizedPurchases = this.sanitizePurchasesExport(purchases, randomize);
+      const sanitizedPurchases = this.sanitizePurchasesExport(
+        purchases,
+        randomize
+      );
 
       return { success: true, data: sanitizedPurchases };
     } catch (error) {
@@ -98,8 +103,10 @@ export class TicketUsecase {
     return Readable.from([csvData]);
   }
 
-  private sanitizePurchasesExport(purchases: (TicketPurchase & { user: any })[], randomize: boolean): any[] {
-
+  private sanitizePurchasesExport(
+    purchases: (TicketPurchase & { user: any })[],
+    randomize: boolean
+  ): any[] {
     const sanitizedPurchases = [];
 
     for (const purchase of purchases) {
@@ -114,7 +121,7 @@ export class TicketUsecase {
           fullname: `${purchase.user.firstname} ${purchase.user.lastname}`,
           purchase_at: purchase.purchase_at,
         };
-        
+
         sanitizedPurchases.push(sanitizedPurchase);
       }
     }
@@ -122,7 +129,10 @@ export class TicketUsecase {
     if (randomize) {
       for (let i = sanitizedPurchases.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
-        [sanitizedPurchases[i], sanitizedPurchases[j]] = [sanitizedPurchases[j], sanitizedPurchases[i]];
+        [sanitizedPurchases[i], sanitizedPurchases[j]] = [
+          sanitizedPurchases[j],
+          sanitizedPurchases[i],
+        ];
       }
     }
 

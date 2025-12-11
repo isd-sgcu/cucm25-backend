@@ -21,15 +21,15 @@ export default function ticketRouter() {
   );
 
   router.get(
-      "/export",
-      authMiddleware,
-      ticketController.exportPurchaseHistory.bind(ticketController)
-  )
+    "/export",
+    authMiddleware,
+    ticketController.exportPurchaseHistory.bind(ticketController)
+  );
 
   router.get(
-      "/export/download",
-      authMiddleware,
-      ticketController.downloadPurchaseHistory.bind(ticketController)
+    "/export/download",
+    authMiddleware,
+    ticketController.downloadPurchaseHistory.bind(ticketController)
   );
 
   return router;
