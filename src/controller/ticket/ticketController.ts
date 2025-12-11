@@ -2,6 +2,7 @@ import { SystemRepository } from "@/repository/system/systemRepository";
 import { AuthenticatedRequest } from "@/types/auth";
 import { AppError } from "@/types/error/AppError";
 import { TicketUsecase } from "@/usecase/ticket/ticketUsecase";
+import { RoleType } from "@prisma/client";
 import type { Request, Response } from "express";
 
 export class TicketController {
@@ -22,6 +23,9 @@ export class TicketController {
   }
 
   async buyTicket(req: AuthenticatedRequest, res: Response) {
+    if (!req.user) {
+      throw new AppError("Unauthorized", 401);
+    }
     // Validate fields
     if (
       req.body.quantity === undefined ||
@@ -56,6 +60,9 @@ export class TicketController {
   }
 
   async exportPurchaseHistory(req: AuthenticatedRequest, res: Response) {
+    if (!req.user || req.user.role !== RoleType.ADMIN) {
+      throw new AppError("Insufficient Permissions", 403);
+    }
     // Validate query parameters
     if (
       "start_time" in req.query &&
@@ -98,6 +105,9 @@ export class TicketController {
   }
 
   async downloadPurchaseHistory(req: AuthenticatedRequest, res: Response) {
+    if (!req.user || req.user.role !== RoleType.ADMIN) {
+      throw new AppError("Insufficient Permissions", 403);
+    }
     // Validate query parameters
     if (
       "start_time" in req.query &&
