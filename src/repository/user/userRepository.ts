@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma"
 import type { OnboardingAnswers, ParsedUser } from "@/types/user"
-import { Prisma, RoleType, User } from "@prisma/client"
+import { Prisma, User } from "@prisma/client"
 import type { LeaderboardUser } from "@/types/leaderboard"
 import { LeaderboardFilter } from "../../types/leaderboard/index"
 
