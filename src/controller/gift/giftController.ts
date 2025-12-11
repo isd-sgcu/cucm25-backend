@@ -13,12 +13,12 @@ export class GiftController {
 	async sendGift(_req: Request, res: Response): Promise<void> {
 		try {
 			const sender = _req.user;
-			const recipient = _req.body.recipient;
+			const data = _req.body;
 
 			const result: {
 				statusCode: number;
 				message: string;
-			} = await this.giftUsecase.sendGift(sender, recipient);
+			} = await this.giftUsecase.sendGift(sender, data);
 
 			res.status(result.statusCode).json({
 				message: result.message,
