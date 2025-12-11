@@ -1,4 +1,3 @@
-import { SystemRepository } from "@/repository/system/systemRepository";
 import { AuthenticatedRequest } from "@/types/auth";
 import { AppError } from "@/types/error/AppError";
 import { TicketUsecase } from "@/usecase/ticket/ticketUsecase";
@@ -17,7 +16,6 @@ export class TicketController {
       const ticketPrice = await this.ticketUsecase.getTicketPrice();
       res.status(200).json({ success: true, data: ticketPrice });
     } catch (error) {
-      console.error("Error fetching ticket price:", error);
       throw new AppError("Failed to get ticket price", 500);
     }
   }
@@ -97,6 +95,11 @@ export class TicketController {
           success: true,
           data: purchasesResponse.data,
         });
+      } else {
+        res.status(400).json({
+          success: false,
+          message: "Failed to export tickets",
+        });
       }
 
     } catch (error) {
@@ -133,14 +136,15 @@ export class TicketController {
 
     try {
       const fileStream = await this.ticketUsecase.downloadTicketExport(
-        req.query as { start_time: string; end_time: string } | { event_name: string }
+        req.query as { start_time: string; end_time: string } | { event_name: string },
+        Boolean(req.query.randomize)
       );
 
       res.setHeader("Content-Disposition", "attachment; filename=ticket_purchases.csv");
       res.setHeader("Content-Type", "text/csv");
       fileStream.pipe(res);
     } catch (error) {
-      throw new AppError("Failed to download ticket export", 500)
+      throw new AppError("Failed to download ticket export", 500);
     }
   }
 }
