@@ -178,7 +178,7 @@ export class UserRepository {
 		});
 	}
 
-  async getParsedUserById(id: string): Promise<ParsedUser | null> {
+	async getParsedUserById(id: string): Promise<ParsedUser | null> {
 		const user = await prisma.user.findFirst({
 			where: {
 				id: id,
@@ -198,7 +198,7 @@ export class UserRepository {
 		return user;
 	}
 
-  /**
+	/**
 	 * Gets a user by username (at the moment it's the format of `{n,p}[0-9][0-9][0-9]`)
 	 * @param {string} username
 	 * @returns The user if one with `username` exists, `null` otherwise.
@@ -213,6 +213,12 @@ export class UserRepository {
 					select: {
 						coin_balance: true,
 						gift_sends_remaining: true,
+					},
+				},
+				answers: {
+					select: {
+						questionId: true,
+						answer: true,
 					},
 				},
 			},
