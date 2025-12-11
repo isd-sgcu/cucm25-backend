@@ -14,7 +14,8 @@ app.use(cors(
         origin: [
             /^https?:\/\/localhost(:[0-9]{1,5})?$/,
             /^https?:\/\/127\.0\.0\.1(:[0-9]{1,5})?$/,
-            /^https?:\/\/(.+\.)?comucos\.com(:[0-9]{1,5})?$/,
+            /^https?:\/\/sso\.comucos\.com(:[0-9]{1,5})?$/,
+            /^https?:\/\/(.+\.)?cucm25\.me(:[0-9]{1,5})?$/
         ],
         methods: ["GET", "POST", "PUT", "DELETE"],
         allowedHeaders: ["Content-Type", "Authorization"],
