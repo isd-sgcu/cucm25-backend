@@ -1,134 +1,131 @@
-import { UserRepository } from "@/repository/user/userRepository"
-import { WalletRepository } from "@/repository/wallet/walletRepository"
-import { AuthUser } from "@/types/auth"
-import { AppError } from "@/types/error/AppError"
-import type { GetRequestParams } from "@/types/user/GET"
+import { UserRepository } from '@/repository/user/userRepository';
+import { WalletRepository } from '@/repository/wallet/walletRepository';
+import { AuthUser } from '@/types/auth';
+import { AppError } from '@/types/error/AppError';
+import type { GetRequestParams } from '@/types/user/GET';
 import type {
-    CreateOnboardingRequest,
-    ResetOnboardingRequest,
-} from "@/types/user/POST"
-import { RoleType, User } from "@prisma/client"
+  CreateOnboardingRequest,
+  ResetOnboardingRequest,
+} from '@/types/user/POST';
+import { RoleType, User } from '@prisma/client';
 
 export class UserUsecase {
-    private userRepository: UserRepository
-    private walletRepository: WalletRepository
+  private userRepository: UserRepository;
+  private walletRepository: WalletRepository;
 
-    constructor(userRepository: UserRepository, walletRepository: WalletRepository) {
-        this.userRepository = userRepository
-        this.walletRepository = walletRepository
+  constructor(
+    userRepository: UserRepository,
+    walletRepository: WalletRepository,
+  ) {
+    this.userRepository = userRepository;
+    this.walletRepository = walletRepository;
+  }
+
+  async getUser(
+    authUser: AuthUser,
+    params: GetRequestParams,
+  ): Promise<User | null> {
+    this.validateGetUserRequest(authUser, params);
+
+    return await this.userRepository.getUser({ username: params.id! });
+  }
+
+  async createOnboarding(
+    authUser: AuthUser,
+    body: CreateOnboardingRequest,
+  ): Promise<void> {
+    await this.validateCreateOnboardingRequest(authUser, body);
+
+    const timestamp = new Date();
+    await this.userRepository.createUserAnswer(
+      authUser.id,
+      body.answers,
+      timestamp,
+    );
+  }
+
+  async resetOnboarding(authUser: AuthUser, body: ResetOnboardingRequest) {
+    const id = await this.validateResetOnboardingRequest(authUser, body);
+
+    await this.userRepository.resetUserAnswer(id);
+  }
+
+  async pay(authUser: AuthUser, amount: number): Promise<void> {
+    if (amount <= 0) {
+      throw new AppError('Invalid amount', 400);
     }
 
-    async getUser(
-        authUser: AuthUser,
-        params: GetRequestParams
-    ): Promise<User | null> {
-        this.validateGetUserRequest(authUser, params)
+    await this.walletRepository.deductCoins(authUser.id, amount);
+  }
 
-        return await this.userRepository.getUser({ username: params.id! })
+  private validateGetUserRequest(
+    authUser: AuthUser,
+    params: GetRequestParams,
+  ): void {
+    if (authUser.role !== RoleType.ADMIN) {
+      throw new AppError('Insufficient Permissions', 403);
     }
 
-    async createOnboarding(
-        authUser: AuthUser,
-        body: CreateOnboardingRequest
-    ): Promise<void> {
-        await this.validateCreateOnboardingRequest(authUser, body)
+    if (!params.id) {
+      throw new AppError('Invalid get user request', 400);
+    }
+  }
 
-        const timestamp = new Date()
-        await this.userRepository.createUserAnswer(
-            authUser.id,
-            body.answers,
-            timestamp
-        )
+  private async validateCreateOnboardingRequest(
+    authUser: AuthUser,
+    body: CreateOnboardingRequest,
+  ): Promise<void> {
+    if (
+      authUser.role !== RoleType.PARTICIPANT &&
+      authUser.role !== RoleType.STAFF
+    ) {
+      throw new AppError('Onboarding is not allowed for this user role', 403);
     }
 
-    async resetOnboarding(authUser: AuthUser, body: ResetOnboardingRequest) {
-        const id = await this.validateResetOnboardingRequest(authUser, body)
-
-        await this.userRepository.resetUserAnswer(id)
+    if (!body.answers || body.answers.length === 0) {
+      throw new AppError('Invalid onboarding request', 400);
     }
 
-    async pay(authUser: AuthUser, amount: number): Promise<void> {
-        if (amount <= 0) {
-            throw new AppError("Invalid amount", 400)
-        }
-        
-        await this.walletRepository.deductCoins(authUser.id, amount)
+    for (const answer of body.answers) {
+      if (!answer.questionId || !answer.optionText) {
+        throw new AppError('Missing questionId or optionText', 400);
+      }
     }
 
-    private validateGetUserRequest(
-        authUser: AuthUser,
-        params: GetRequestParams
-    ): void {
-        if (authUser.role !== RoleType.ADMIN) {
-            throw new AppError("Insufficient Permissions", 403)
-        }
+    const user = await this.userRepository.getUser({ id: authUser.id });
 
-        if (!params.id) {
-            throw new AppError("Invalid get user request", 400)
-        }
+    if (!user) {
+      throw new AppError('User does not exist', 404);
+    }
+    if (user.termsAcceptedAt !== null) {
+      throw new AppError(
+        `User already onboarding at ${user.termsAcceptedAt.toISOString()}`,
+        400,
+      );
+    }
+  }
+
+  private async validateResetOnboardingRequest(
+    authUser: AuthUser,
+    body: ResetOnboardingRequest,
+  ): Promise<string> {
+    if (authUser.role !== RoleType.ADMIN) {
+      throw new AppError('Insufficient Permissions', 403);
     }
 
-    private async validateCreateOnboardingRequest(
-        authUser: AuthUser,
-        body: CreateOnboardingRequest
-    ): Promise<void> {
-        if (
-            authUser.role !== RoleType.PARTICIPANT &&
-            authUser.role !== RoleType.STAFF
-        ) {
-            throw new AppError(
-                "Onboarding is not allowed for this user role",
-                403
-            )
-        }
-
-        if (!body.answers || body.answers.length === 0) {
-            throw new AppError("Invalid onboarding request", 400)
-        }
-
-        for (const answer of body.answers) {
-            if (!answer.questionId || !answer.optionText) {
-                throw new AppError("Missing questionId or optionText", 400)
-            }
-        }
-
-        const user = await this.userRepository.getUser({ id: authUser.id })
-
-        if (!user) {
-            throw new AppError("User does not exist", 404)
-        }
-        if (user.termsAcceptedAt !== null) {
-            throw new AppError(
-                `User already onboarding at ${user.termsAcceptedAt.toISOString()}`,
-                400
-            )
-        }
+    if (!body.id) {
+      throw new AppError('Invalid reset user request', 400);
     }
 
-    private async validateResetOnboardingRequest(
-        authUser: AuthUser,
-        body: ResetOnboardingRequest
-    ): Promise<string> {
-        if (authUser.role !== RoleType.ADMIN) {
-            throw new AppError("Insufficient Permissions", 403)
-        }
-
-        if (!body.id) {
-            throw new AppError("Invalid reset user request", 400)
-        }
-
-        const user = await this.userRepository.getUser({ username: body.id })
-        if (!user) {
-            throw new AppError("User does not exist", 404)
-        }
-
-        if (
-            user.role !== RoleType.PARTICIPANT &&
-            user.role !== RoleType.STAFF
-        ) {
-            throw new AppError("Reset is not allowed for this user role", 403)
-        }
-
-        return user.id
+    const user = await this.userRepository.getUser({ username: body.id });
+    if (!user) {
+      throw new AppError('User does not exist', 404);
     }
+
+    if (user.role !== RoleType.PARTICIPANT && user.role !== RoleType.STAFF) {
+      throw new AppError('Reset is not allowed for this user role', 403);
+    }
+
+    return user.id;
+  }
 }

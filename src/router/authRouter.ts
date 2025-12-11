@@ -1,17 +1,17 @@
-import { AuthController } from "@/controller/auth/authController"
-import { authMiddleware } from "@/middleware/authMiddleware"
-import { UserRepository } from "@/repository/user/userRepository"
-import { AuthUsecase } from "@/usecase/auth/authUsecase"
-import { Router } from "express"
+import { AuthController } from '@/controller/auth/authController';
+import { authMiddleware } from '@/middleware/authMiddleware';
+import { UserRepository } from '@/repository/user/userRepository';
+import { AuthUsecase } from '@/usecase/auth/authUsecase';
+import { Router } from 'express';
 
 export default function authRouter() {
-    const router = Router()
-    const userRepository = new UserRepository()
-    const authUsecase = new AuthUsecase(userRepository)
-    const authController = new AuthController(authUsecase)
+  const router = Router();
+  const userRepository = new UserRepository();
+  const authUsecase = new AuthUsecase(userRepository);
+  const authController = new AuthController(authUsecase);
 
-    router.post("/login", authController.login.bind(authController))
-    router.get("/me", authMiddleware, authController.me.bind(authController))
+  router.post('/login', authController.login.bind(authController));
+  router.get('/me', authMiddleware, authController.me.bind(authController));
 
-    return router
+  return router;
 }

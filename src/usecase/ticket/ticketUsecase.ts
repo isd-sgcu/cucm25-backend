@@ -1,9 +1,9 @@
-import { TicketRepository } from "@/repository/ticket/ticketRepository";
-import { WalletRepository } from "@/repository/wallet/walletRepository";
-import { AuthUser } from "@/types/auth";
-import { Parser } from "@json2csv/plainjs";
-import { TicketPurchase } from "@prisma/client";
-import { Readable } from "stream";
+import { TicketRepository } from '@/repository/ticket/ticketRepository';
+import { WalletRepository } from '@/repository/wallet/walletRepository';
+import { AuthUser } from '@/types/auth';
+import { Parser } from '@json2csv/plainjs';
+import { TicketPurchase } from '@prisma/client';
+import { Readable } from 'stream';
 
 export class TicketUsecase {
   private ticketRepository: TicketRepository;
@@ -11,7 +11,7 @@ export class TicketUsecase {
 
   constructor(
     ticketRepository: TicketRepository,
-    walletRepository: WalletRepository
+    walletRepository: WalletRepository,
   ) {
     this.ticketRepository = ticketRepository;
     this.walletRepository = walletRepository;
@@ -31,7 +31,7 @@ export class TicketUsecase {
   async buyTicket(
     user: AuthUser,
     quantity: number,
-    event_name?: string
+    event_name?: string,
   ): Promise<{
     success: boolean;
     message: string;
@@ -46,13 +46,13 @@ export class TicketUsecase {
 
       const wallet = await this.walletRepository.getUserWallet(user.id);
       if (!wallet || wallet.coin_balance < totalCost) {
-        throw new Error("Insufficient coin balance");
+        throw new Error('Insufficient coin balance');
       }
 
       const { total, purchase_at } = await this.ticketRepository.buyTickets(
         user.id,
         quantity,
-        event_name
+        event_name,
       );
 
       return {
@@ -67,18 +67,18 @@ export class TicketUsecase {
 
   async getTicketPurchases(
     query: { start_time: string; end_time: string } | { event_name: string },
-    randomize: boolean = false
+    randomize: boolean = false,
   ): Promise<{ success: boolean; data?: any }> {
     try {
       const { start_time, end_time, event_name } = query as any;
 
       const { purchases } = await this.ticketRepository.getTicketPurchases(
-        start_time ? { start_time, end_time } : { event_name }
+        start_time ? { start_time, end_time } : { event_name },
       );
 
       const sanitizedPurchases = this.sanitizePurchasesExport(
         purchases,
-        randomize
+        randomize,
       );
 
       return { success: true, data: sanitizedPurchases };
@@ -89,12 +89,12 @@ export class TicketUsecase {
 
   async downloadTicketExport(
     query: { start_time: string; end_time: string } | { event_name: string },
-    randomize: boolean = false
+    randomize: boolean = false,
   ): Promise<NodeJS.ReadableStream> {
     const { success, data } = await this.getTicketPurchases(query, randomize);
 
     if (!success || !data) {
-      throw new Error("Failed to generate ticket export");
+      throw new Error('Failed to generate ticket export');
     }
 
     const parser = new Parser();
@@ -105,7 +105,7 @@ export class TicketUsecase {
 
   private sanitizePurchasesExport(
     purchases: (TicketPurchase & { user: any })[],
-    randomize: boolean
+    randomize: boolean,
   ): any[] {
     const sanitizedPurchases = [];
 

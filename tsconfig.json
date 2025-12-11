@@ -31,7 +31,7 @@
       "@/usecase/*": ["./src/usecase/*"],
       "@/lib/*": ["./src/lib/*"],
       "@/middleware/*": ["./src/middleware/*"],
-      "@/utils/*": ["./src/utils/*"],
+      "@/utils/*": ["./src/utils/*"]
     },
 
     // Stricter Typechecking Options

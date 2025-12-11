@@ -1,5 +1,5 @@
-import { prisma } from "@/lib/prisma";
-import { AppError } from "@/types/error/AppError";
+import { prisma } from '@/lib/prisma';
+import { AppError } from '@/types/error/AppError';
 
 export class WalletRepository {
   constructor() {}
@@ -13,7 +13,7 @@ export class WalletRepository {
   async deductCoins(userId: string, amount: number) {
     const userWallet = await this.getUserWallet(userId);
     if (!userWallet || userWallet.coin_balance < amount) {
-      throw new AppError("Insufficient coin balance", 400);
+      throw new AppError('Insufficient coin balance', 400);
     }
 
     const [wallet] = await prisma.$transaction([
@@ -29,7 +29,7 @@ export class WalletRepository {
         data: {
           sender_user_id: userId,
           coin_amount: amount,
-          type: "SPEND",
+          type: 'SPEND',
         },
       }),
     ]);
