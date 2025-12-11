@@ -11,7 +11,7 @@ export class WalletRepository {
   }
 
   async deductCoins(userId: string, amount: number) {
-    return await prisma.wallet.update({
+    const wallet = await prisma.wallet.update({
       where: { user_id: userId },
       data: {
         coin_balance: {
@@ -19,6 +19,18 @@ export class WalletRepository {
         }
       }
     });
+
+    if (wallet) {
+      await prisma.transaction.create({
+        data: {
+          sender_user_id: userId,
+          coin_amount: amount,
+          type: "SPEND",
+        }
+      })
+    }
+
+    return wallet;
   }
 
   async addCoins(userId: string, amount: number) {
