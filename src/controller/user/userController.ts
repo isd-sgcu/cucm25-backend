@@ -70,10 +70,6 @@ export class UserController {
             throw new AppError("Unauthorized", 401)
         }
 
-        if (!req.body.amount || typeof req.body.amount !== "number" || req.body.amount <= 0) {
-            throw new AppError("Invalid amount", 400)
-        }
-
         try {
             await this.userUsecase.pay(req.user, req.body.amount)
             res.status(200).json({ success: true, message: "Payment successful" })
@@ -83,7 +79,12 @@ export class UserController {
                     success: false,
                     message: error.message,
                 })
-                return
+            } else {
+                console.error("Payment error:", error)
+                res.status(500).json({
+                    success: false,
+                    message: "An unexpected error occurred",
+                })
             }
         }
     }
