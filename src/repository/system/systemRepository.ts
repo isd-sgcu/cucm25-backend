@@ -72,7 +72,8 @@ export class SystemRepository implements ISystemRepository {
             "junior_login_enabled": "Enable/disable system access for participants", 
             "mod_login_enabled": "Enable/disable system access for moderators",
             "senior_login_enabled": "Enable/disable system access for staff members",
-            "gift_hourly_quota": "Number of gifts that can be sent per hour"
+            "gift_hourly_quota": "Number of gifts that can be sent per hour",
+            "ticket_price": "Price of a single ticket purchase"
         }
         return descriptions[settingKey] || ""
     }

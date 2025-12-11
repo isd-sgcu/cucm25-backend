@@ -16,6 +16,7 @@ export interface SystemStatusResponse {
     modLoginEnabled: boolean
     seniorLoginEnabled: boolean
     giftHourlyQuota: number
+    ticketPrice: number
     lastUpdated: string
 }
 
@@ -31,3 +32,4 @@ export type SettingKey =
     | "mod_login_enabled"
     | "senior_login_enabled"
     | "gift_hourly_quota"
+    | "ticket_price"
