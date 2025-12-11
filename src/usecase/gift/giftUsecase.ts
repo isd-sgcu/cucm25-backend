@@ -46,6 +46,8 @@ export class GiftUsecase {
 		// this validates the fetched data
 		this.validateGiftSend(senderData, recipientData);
 
+		// TODO: validate reset time
+
 		// this validates the recipient info
 		// (icebreaking questions and the such)
 		this.validateRecipientDataAccuracy(data, recipientData);
