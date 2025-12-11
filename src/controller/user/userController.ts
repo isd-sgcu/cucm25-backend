@@ -64,4 +64,27 @@ export class UserController {
             })
         }
     }
+
+    async pay(req: AuthenticatedRequest, res: Response): Promise<void> {
+        if (!req.user) {
+            throw new AppError("Unauthorized", 401)
+        }
+
+        if (!req.body.amount || typeof req.body.amount !== "number" || req.body.amount <= 0) {
+            throw new AppError("Invalid amount", 400)
+        }
+
+        try {
+            await this.userUsecase.pay(req.user, req.body.amount)
+            res.status(200).json({ success: true, message: "Payment successful" })
+        } catch (error) {
+            if (error instanceof AppError) {
+                res.status(error.statusCode).json({
+                    success: false,
+                    message: error.message,
+                })
+                return
+            }
+        }
+    }
 }
