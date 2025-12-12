@@ -24,4 +24,42 @@ export class TransactionRepository {
       },
     });
   }
+
+  async getUserCoinTransactions(user: ParsedUser | null) {
+    if (!user) {
+      throw new AppError('Missing user info', 500);
+    }
+
+    // get either...
+    // - if `user` is the recipient OR
+    // - if `user` is the sender *and* it's not a gift.
+    const result = await prisma.transaction.findMany({
+      where: {
+        OR: [
+          { recipient_user_id: user.id },
+          {
+            AND: [{ sender_user_id: user.id }, { type: { not: 'GIFT' } }],
+          },
+        ],
+      },
+    });
+
+    return result;
+  }
+
+  async getUserGiftTransactions(user: ParsedUser | null) {
+    if (!user) {
+      throw new AppError('Missing user info', 500);
+    }
+
+    // get...
+    // - if `user` is the sender *and* it's a gift.
+    const result = await prisma.transaction.findMany({
+      where: {
+        AND: [{ sender_user_id: user.id }, { type: 'GIFT' }],
+      },
+    });
+
+    return result;
+  }
 }
