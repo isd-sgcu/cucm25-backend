@@ -6,6 +6,7 @@ import systemRouter from '@/router/system';
 import userRouter from '@/router/userRouter';
 import leaderboardRouter from '@/router/leaderboardRouter';
 import ticketRouter from '@/router/ticketRouter';
+import transactionRouter from '@/router/transactionRouter';
 
 export default function routerManager() {
   const router = Router();
@@ -17,6 +18,7 @@ export default function routerManager() {
   router.use('/leaderboard', leaderboardRouter());
   router.use('/ticket', ticketRouter());
   router.use('/gift', giftRouter());
+  router.use('/transaction', transactionRouter());
 
   return router;
 }
