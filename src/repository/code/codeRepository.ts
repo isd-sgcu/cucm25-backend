@@ -212,8 +212,11 @@ export class CodeRepository {
     return await prisma.$transaction(callback);
   }
 
-  async getCodes(): Promise<any | null> {
+  async getSelfCreatedCodes(userId: string): Promise<any | null> {
     return await prisma.code.findMany({
+      where: {
+        created_by_user_id: userId,
+      },
       include: {
         creator: {
           select: {
