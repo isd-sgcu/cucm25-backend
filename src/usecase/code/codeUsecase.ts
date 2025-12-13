@@ -155,7 +155,7 @@ export class CodeUsecase implements ICodeUsecase {
       );
     }
 
-    const data = await this.codeRepository.getCodes();
+    const data = await this.codeRepository.getSelfCreatedCodes(userId);
 
     return data;
   }
