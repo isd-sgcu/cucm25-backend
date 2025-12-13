@@ -59,13 +59,13 @@ export class TransactionRepository {
         correspondentName = `Redeemed from ${record.relatedCode?.activity_name}`;
         action = 'received';
       } else if (record.type === 'PAYMENT') {
-        correspondentName = `${record.recipient?.firstname} ${record.recipient?.lastname}`;
+        correspondentName = `Paid to central account.`;
         action = 'sent';
       } else if (record.type === 'TICKET_PURCHASE') {
         correspondentName = `Bought some lucky tickets.`;
         action = 'sent';
       } else if (record.recipient_user_id === user.id) {
-        correspondentName = `${record.sender?.firstname} ${record.sender?.lastname}`;
+        correspondentName = `Received gift from ${record.sender?.firstname} ${record.sender?.lastname}`;
         action = 'received';
       } else {
         correspondentName = `A mystery.`;
@@ -105,7 +105,7 @@ export class TransactionRepository {
     const result: Array<GiftHistoryRecord> = [];
 
     for (const record of data) {
-      const recipientName = `${record.recipient?.firstname} ${record.recipient?.lastname}`;
+      const recipientName = `Sent gift to ${record.recipient?.firstname} ${record.recipient?.lastname}`;
       result.push({
         recipientName: recipientName,
         amount: 1,
