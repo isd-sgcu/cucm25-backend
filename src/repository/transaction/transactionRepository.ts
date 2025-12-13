@@ -53,15 +53,23 @@ export class TransactionRepository {
       let correspondentName = '';
       let action = '';
 
-      if (record.type === 'CODE_REDEMPTION') {
+      if (record.type === 'ADMIN_ADJUSTMENT') {
+        correspondentName = `Adjusted by administrator.`;
+      } else if (record.type === 'CODE_REDEMPTION') {
         correspondentName = `Redeemed from ${record.relatedCode?.activity_name}`;
         action = 'received';
+      } else if (record.type === 'PAYMENT') {
+        correspondentName = `${record.recipient?.firstname} ${record.recipient?.lastname}`;
+        action = 'sent';
+      } else if (record.type === 'TICKET_PURCHASE') {
+        correspondentName = `Bought some lucky tickets.`;
+        action = 'sent';
       } else if (record.recipient_user_id === user.id) {
         correspondentName = `${record.sender?.firstname} ${record.sender?.lastname}`;
         action = 'received';
       } else {
-        correspondentName = `${record.recipient?.firstname} ${record.recipient?.lastname}`;
-        action = 'sent';
+        correspondentName = `A mystery.`;
+        action = record.coin_amount < 0 ? 'sent' : 'received';
       }
 
       result.push({
