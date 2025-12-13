@@ -88,4 +88,29 @@ export class UserController {
       }
     }
   }
+
+  async adjustCoins(req: AuthenticatedRequest, res: Response): Promise<void> {
+    if (!req.user) {
+      throw new AppError('Unauthorized', 401);
+    }
+
+    try {
+      const { amount, action, username } = req.body;
+      await this.userUsecase.adjustCoins(req.user, username, amount, action);
+      res.status(200).json({ success: true, message: 'Wallet adjusted successfully' });
+    } catch (error) {
+      if (error instanceof AppError) {
+        res.status(error.statusCode).json({
+          success: false,
+          message: error.message,
+        });
+      } else {
+        console.error('Adjust wallet error:', error);
+        res.status(500).json({
+          success: false,
+          message: 'An unexpected error occurred',
+        });
+      }
+    }
+  }
 }
