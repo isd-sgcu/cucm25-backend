@@ -46,8 +46,6 @@ export class GiftUsecase {
     // this validates the fetched data
     this.validateGiftSend(senderData, recipientData);
 
-    // TODO: validate reset time
-
     // this validates the recipient info
     // (icebreaking questions and the such)
     this.validateRecipientDataAccuracy(data, recipientData);
@@ -66,53 +64,11 @@ export class GiftUsecase {
     const senderUsername = (senderData as ParsedUser).username;
     const recipientUsername = (recipientData as ParsedUser).username;
 
-    await prisma.$transaction(async (tx) => {
-      // Deduct 1 from the sender's quota
-      await tx.user.update({
-        where: { id: senderId },
-        data: {
-          wallets: {
-            update: {
-              where: {
-                user_id: senderId,
-              },
-              data: {
-                gift_sends_remaining: { decrement: 1 },
-              },
-            },
-          },
-        },
-      });
-      // Add 100 to `recipient`'s wallet
-      await tx.user.update({
-        where: { id: recipientId },
-        data: {
-          wallets: {
-            update: {
-              where: {
-                user_id: recipientId,
-              },
-              data: {
-                coin_balance: {
-                  increment: GIFT_SYSTEM.DEFAULT_VALUE,
-                },
-                cumulative_coin: {
-                  increment: GIFT_SYSTEM.DEFAULT_VALUE,
-                },
-              },
-            },
-          },
-        },
-      });
-      await tx.transaction.create({
-        data: {
-          sender_user_id: senderId,
-          recipient_user_id: recipientId,
-          type: 'GIFT',
-          coin_amount: amount,
-        },
-      });
-    });
+    if (await this.giftRepository.checkRecipientEligibility(senderId, recipientId) === false) {
+      throw new AppError('You have already sent a gift to this recipient before.', 400);
+    }
+
+    await this.giftRepository.sendGift(senderId, recipientId);
 
     logger.info(
       'GiftUsecase',
@@ -147,8 +103,8 @@ export class GiftUsecase {
     if (sender.username === recipient.username) {
       throw new AppError("Can't send gift to yourself!", 403);
     }
-    if (sender.wallets.gift_sends_remaining <= 0) {
-      throw new AppError('You ran out of gift sends.', 403);
+    if (sender.wallets.gift_sends_remaining! <= 0) {
+      throw new AppError('You ran out of gift sends.', 400);
     }
   }
 
@@ -175,6 +131,13 @@ export class GiftUsecase {
     if (!recipientData.answers) {
       throw new AppError('Recipient answer data not found', 404);
     }
+
+    if (recipientData.answers.length < GIFT_SYSTEM.QUESTION_COUNT) {
+      throw new AppError(
+        'Recipient has not answered enough icebreaking questions',
+        400,
+      );
+    } 
 
     // shouldn't go in
     if (answer.username.toLowerCase() !== recipientData.username) {

@@ -3,6 +3,7 @@ import type { OnboardingAnswers, ParsedUser } from '@/types/user';
 import { Prisma, User } from '@prisma/client';
 import type { LeaderboardUser } from '@/types/leaderboard';
 import { LeaderboardFilter } from '../../types/leaderboard/index';
+import { SYSTEM_DEFAULTS } from '@/constant/systemConfig';
 
 export class UserRepository {
   async create(user: ParsedUser): Promise<void> {
@@ -31,15 +32,33 @@ export class UserRepository {
 
   async getUser(
     input: Partial<Pick<User, 'id' | 'username'>>,
-  ): Promise<User | null> {
-    const user = await prisma.user.findFirst({
+  ): Promise<
+    | (User & {
+        wallets: {
+          coin_balance: number;
+          cumulative_coin: number;
+          gift_sends_remaining: number;
+        };
+      })
+    | null
+  > {
+    const giftHourlyQuota = await prisma.systemSetting.findUnique({
+      where: { setting_key: 'gift_hourly_quota' },
+    });
+
+    const quota = parseInt(
+      giftHourlyQuota?.setting_value || SYSTEM_DEFAULTS.GIFT_QUOTA.toString(),
+    );
+
+    let user = await prisma.user.findFirst({
       where: input,
       include: {
         wallets: {
           select: {
             coin_balance: true,
             cumulative_coin: true,
-            gift_sends_remaining: true,
+            last_gift_reset: true,
+            gift_sends: true,
           },
         },
       },
@@ -47,7 +66,45 @@ export class UserRepository {
     if (!user) {
       return null;
     }
-    return user;
+
+    const startOfCurrentHour = new Date();
+    startOfCurrentHour.setMinutes(0, 0, 0);
+
+    if (
+      !user.wallets.last_gift_reset ||
+      user.wallets.last_gift_reset < startOfCurrentHour
+    ) {
+      user = await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          wallets: {
+            update: {
+              gift_sends: 0,
+              last_gift_reset: new Date(),
+            },
+          },
+        },
+        include: {
+          wallets: {
+            select: {
+              coin_balance: true,
+              cumulative_coin: true,
+              last_gift_reset: true,
+              gift_sends: true,
+            },
+          },
+        },
+      });
+    }
+
+    return {
+      ...user,
+      wallets: {
+        coin_balance: user.wallets.coin_balance,
+        cumulative_coin: user.wallets.cumulative_coin,
+        gift_sends_remaining: (quota - user.wallets.gift_sends),
+      },
+    };
   }
 
   async findExists(
@@ -110,91 +167,10 @@ export class UserRepository {
       });
     });
   }
-  /**
-   * Adds to the total coin amount (which is named `cumulative_coin` since 1 `level` is 1 `coin`) to the user with `id`'s wallet
-   * `coin`s can be reduced, but `cumulative_coin` can't, so `cumulative_coin` acts as a total coin counter.
-   * @param {string} id The target user's id.
-   * @param {number} amount The amount to add. Negative numbers are allowed but should not be used unless for exceptional cases.
-   */
-  async addTotalCoinAmount(id: string, amount: number) {
-    await prisma.user.update({
-      where: { id: id },
-      data: {
-        wallets: {
-          update: {
-            where: {
-              user_id: id,
-            },
-            data: {
-              cumulative_coin: { increment: amount },
-            },
-          },
-        },
-      },
-    });
-  }
-
-  /**
-   * Adds sending quota to user with `id`'s wallet.
-   * @param {string} id The target user's id.
-   * @param {number} amount The amount to add. Negative numbers (to represent subtracting) are allowed as well.
-   */
-  async addSendingQuota(id: string, amount: number) {
-    await prisma.user.update({
-      where: { id: id },
-      data: {
-        wallets: {
-          update: {
-            where: {
-              user_id: id,
-            },
-            data: { gift_sends_remaining: { increment: amount } },
-          },
-        },
-      },
-    });
-  }
-
-  /**
-   * Adds coin balance to user with `id`'s wallet.
-   * @param {string} id The target user's id.
-   * @param {number} amount The amount to add. Negative numbers (to represent subtracting) are allowed as well.
-   */
-  async addCoinBalance(id: string, amount: number) {
-    await prisma.user.update({
-      where: { id: id },
-      data: {
-        wallets: {
-          update: {
-            where: {
-              user_id: id,
-            },
-            data: {
-              coin_balance: { increment: amount },
-            },
-          },
-        },
-      },
-    });
-  }
 
   async getParsedUserById(id: string): Promise<ParsedUser | null> {
-    const user = await prisma.user.findFirst({
-      where: {
-        id: id,
-      },
-      include: {
-        wallets: {
-          select: {
-            coin_balance: true,
-            gift_sends_remaining: true,
-          },
-        },
-      },
-    });
-    if (!user) {
-      return null;
-    }
+
+    const user = await this.getUser({ id });
     return user;
   }
 
@@ -212,7 +188,7 @@ export class UserRepository {
         wallets: {
           select: {
             coin_balance: true,
-            gift_sends_remaining: true,
+            gift_sends: true,
           },
         },
         answers: {

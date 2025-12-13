@@ -6,6 +6,7 @@
 // Gift System Configuration
 export const GIFT_SYSTEM = {
   DEFAULT_HOURLY_QUOTA: 5,
+  QUESTION_COUNT: 3,
   DISABLED_QUOTA: 0,
   MIN_QUOTA: 0,
   MAX_QUOTA: 1000,
