@@ -1,4 +1,4 @@
-import { ICodeRepository } from '@/repository/code/codeRepository';
+import { CodeRepository } from '@/repository/code/codeRepository';
 import { AppError } from '@/types/error/AppError';
 import { Prisma } from '@prisma/client';
 import {
@@ -21,7 +21,7 @@ export interface ICodeUsecase {
 }
 
 export class CodeUsecase implements ICodeUsecase {
-  constructor(private codeRepository: ICodeRepository) {}
+  constructor(private codeRepository: CodeRepository) {}
 
   async generateCode(
     data: GenerateCodeRequest,
@@ -124,72 +124,15 @@ export class CodeUsecase implements ICodeUsecase {
       throw new AppError(`This code is only for ${code.target_role} role`, 403);
     }
 
-    const wallet = await this.codeRepository.getWalletByUserId(userId);
-    if (!wallet) {
-      throw new AppError('Wallet not found', 404);
-    }
-
-    const newBalance = wallet.coin_balance + code.reward_coin;
-
-    // Use database transaction with duplicate check inside to prevent race conditions
-    const result = await this.codeRepository.executeTransaction(
-      async (prisma: Prisma.TransactionClient) => {
-        // Check if already redeemed inside transaction for atomic consistency
-        const existingRedemption = await prisma.codeRedemption.findUnique({
-          where: {
-            user_id_code_id: {
-              user_id: userId,
-              code_id: code.id,
-            },
-          },
-        });
-
-        if (existingRedemption) {
-          throw new AppError('You have already redeemed this code', 400);
-        }
-
-        // Create redemption record (protected by unique constraint)
-        await prisma.codeRedemption.create({
-          data: {
-            user_id: userId,
-            code_id: code.id,
-          },
-        });
-
-        // Update wallet balance
-        await prisma.wallet.update({
-          where: { user_id: userId },
-          data: {
-            coin_balance: {
-              increment: code.reward_coin,
-            },
-            cumulative_coin: {
-              increment: code.reward_coin,
-            },
-            updated_at: new Date(),
-          },
-        });
-
-        // Create transaction record
-        const transaction = await prisma.transaction.create({
-          data: {
-            recipient_user_id: userId,
-            type: 'CODE_REDEMPTION',
-            coin_amount: code.reward_coin,
-            related_code_id: code.id,
-          },
-        });
-
-        return { transactionId: transaction.id };
-      },
-    );
+    const [redemption, transaction, wallet] = await this.codeRepository.redeemCode(userId, code.id);
 
     return {
       success: true,
       message: `Successfully redeemed code: ${code.activity_name}`,
       rewardCoin: code.reward_coin,
-      newBalance,
-      transactionId: result.transactionId,
+      newBalance: wallet.coin_balance,
+      transactionId: transaction.id,
+      redeemedAt: redemption.redeemed_at!.toISOString(),
     };
   }
 }
