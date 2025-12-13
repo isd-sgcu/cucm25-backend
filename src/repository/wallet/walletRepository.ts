@@ -1,6 +1,5 @@
 import { prisma } from '@/lib/prisma';
 import { AppError } from '@/types/error/AppError';
-import { TransactionType } from '@prisma/client';
 
 export class WalletRepository {
   constructor() {}
