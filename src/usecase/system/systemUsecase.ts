@@ -22,6 +22,17 @@ export interface ISystemUsecase {
   getSystemStatus(): Promise<SystemStatusResponse>;
 
   checkSystemAvailability(userRole?: string): Promise<boolean>;
+
+  setSystemSetting(
+    adminUserId: string,
+    key: SettingKey,
+    value: string,
+  ): Promise<{
+    success: boolean;
+    message: string;
+    settingKey: string;
+    settingValue: string;
+  }>;
 }
 
 export class SystemUsecase implements ISystemUsecase {
@@ -47,7 +58,7 @@ export class SystemUsecase implements ISystemUsecase {
       SYSTEM_SETTINGS.JUNIOR_LOGIN_ENABLED as SettingKey,
       SYSTEM_SETTINGS.MOD_LOGIN_ENABLED as SettingKey,
       SYSTEM_SETTINGS.SENIOR_LOGIN_ENABLED as SettingKey,
-      SYSTEM_SETTINGS.GIFT_HOURLY_QUOTA as SettingKey,
+      // SYSTEM_SETTINGS.GIFT_HOURLY_QUOTA as SettingKey,
       // FIXME: Uncomment when ticket price setting is implemented
       // SYSTEM_SETTINGS.TICKET_PRICE as SettingKey
     ];
@@ -57,17 +68,17 @@ export class SystemUsecase implements ISystemUsecase {
     }
 
     let settingValue: string;
-    if (data.settingKey === 'gift_hourly_quota') {
-      // For quota, enabled=true means default value, enabled=false means disabled
-      settingValue = data.enabled
-        ? GIFT_SYSTEM.DEFAULT_HOURLY_QUOTA.toString()
-        : GIFT_SYSTEM.DISABLED_QUOTA.toString();
-    } else {
-      // For boolean settings
-      settingValue = data.enabled
-        ? SYSTEM_DEFAULTS.BOOLEAN_ENABLED
-        : SYSTEM_DEFAULTS.BOOLEAN_DISABLED;
-    }
+    // if (data.settingKey === 'gift_hourly_quota') {
+    //   // For quota, enabled=true means default value, enabled=false means disabled
+    //   settingValue = data.enabled
+    //     ? GIFT_SYSTEM.DEFAULT_HOURLY_QUOTA.toString()
+    //     : GIFT_SYSTEM.DISABLED_QUOTA.toString();
+    // } else {
+    //   // For boolean settings
+    settingValue = data.enabled
+      ? SYSTEM_DEFAULTS.BOOLEAN_ENABLED
+      : SYSTEM_DEFAULTS.BOOLEAN_DISABLED;
+    // }
 
     const updatedSetting = await this.systemRepository.updateSystemSetting(
       data.settingKey as SettingKey,
@@ -80,6 +91,48 @@ export class SystemUsecase implements ISystemUsecase {
       settingKey: data.settingKey,
       enabled: data.enabled,
       updatedAt: updatedSetting.updated_at.toISOString(),
+    };
+  }
+
+  async setSystemSetting(
+    adminUserId: string,
+    key: SettingKey,
+    value: string,
+  ): Promise<{
+    success: boolean;
+    message: string;
+    settingKey: string;
+    settingValue: string;
+  }> {
+    const user = await this.systemRepository.getUserWithRole(adminUserId);
+    if (!user) {
+      throw new AppError('User not found', 404);
+    }
+
+    const userRole = user.role;
+    if (userRole !== 'ADMIN') {
+      throw new AppError('Only administrators can modify system settings', 403);
+    }
+
+    const validKeys: SettingKey[] = [
+      SYSTEM_SETTINGS.GIFT_HOURLY_QUOTA as SettingKey,
+      SYSTEM_SETTINGS.TICKET_PRICE as SettingKey,
+    ];
+
+    if (!validKeys.includes(key)) {
+      throw new AppError('Invalid setting key for this operation', 400);
+    }
+
+    const updatedSetting = await this.systemRepository.updateSystemSetting(
+      key,
+      String(value)
+    );
+    
+    return {
+      success: true,
+      message: `Setting ${key} updated successfully`,
+      settingKey: key,
+      settingValue: updatedSetting.setting_value,
     };
   }
 
@@ -97,13 +150,16 @@ export class SystemUsecase implements ISystemUsecase {
     return {
       juniorLoginEnabled:
         settingsMap.get(SYSTEM_SETTINGS.JUNIOR_LOGIN_ENABLED) ===
-        SYSTEM_DEFAULTS.BOOLEAN_ENABLED,
+        SYSTEM_DEFAULTS.BOOLEAN_ENABLED || 
+        SYSTEM_DEFAULTS.JUNIOR_LOGIN_ENABLED,
       modLoginEnabled:
         settingsMap.get(SYSTEM_SETTINGS.MOD_LOGIN_ENABLED) ===
-        SYSTEM_DEFAULTS.BOOLEAN_ENABLED,
+        SYSTEM_DEFAULTS.BOOLEAN_ENABLED || 
+        SYSTEM_DEFAULTS.MOD_LOGIN_ENABLED,
       seniorLoginEnabled:
         settingsMap.get(SYSTEM_SETTINGS.SENIOR_LOGIN_ENABLED) ===
-        SYSTEM_DEFAULTS.BOOLEAN_ENABLED,
+        SYSTEM_DEFAULTS.BOOLEAN_ENABLED ||
+        SYSTEM_DEFAULTS.SENIOR_LOGIN_ENABLED,
       giftHourlyQuota: parseInt(
         settingsMap.get(SYSTEM_SETTINGS.GIFT_HOURLY_QUOTA) ||
           SYSTEM_DEFAULTS.GIFT_QUOTA,
