@@ -25,5 +25,12 @@ export default function codeRouter() {
     codeController.redeemCode.bind(codeController),
   );
 
+  // GET /api/code/history - requires authentication
+  router.get(
+    '/history',
+    authMiddleware,
+    codeController.getCodeHistory.bind(codeController),
+  );
+
   return router;
 }
