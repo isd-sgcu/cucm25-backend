@@ -213,6 +213,15 @@ export class CodeRepository {
   }
 
   async getCodes(): Promise<any | null> {
-    return await prisma.code.findMany({});
+    return await prisma.code.findMany({
+      include: {
+        creator: {
+          select: {
+            firstname: true,
+            lastname: true,
+          },
+        },
+      },
+    });
   }
 }
