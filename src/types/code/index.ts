@@ -46,3 +46,7 @@ export interface CodeWithCreator {
     email: string;
   };
 }
+
+export interface CodeHistoryResponse {
+  data: Array<CodeWithCreator>;
+}
