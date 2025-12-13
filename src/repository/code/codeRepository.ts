@@ -1,4 +1,4 @@
-import { Prisma, CodeRedemption, Transaction, Wallet } from '@prisma/client';
+import { Prisma, CodeRedemption, Transaction, Wallet, Code } from '@prisma/client';
 import { randomInt } from 'crypto';
 import { AppError } from '@/types/error/AppError';
 import { BUSINESS_RULES } from '@/constant/systemConfig';
@@ -140,17 +140,13 @@ export class CodeRepository {
     });
   }
 
-  async redeemCode(userId: string, codeId: number): Promise<[CodeRedemption, Transaction, Wallet]> {
-    const code = await this.findCodeByString(codeId.toString());
-    if (!code) {
-      throw new AppError('Code not found', 404);
-    }
+  async redeemCode(userId: string, code: Code): Promise<[CodeRedemption, Transaction, Wallet]> {
 
     const existingRedemption = await prisma.codeRedemption.findUnique({
       where: {
         user_id_code_id: {
           user_id: userId,
-          code_id: codeId,
+          code_id: code.id,
         },
       },
     });
@@ -163,7 +159,7 @@ export class CodeRepository {
       const redemption = await tx.codeRedemption.create({
         data: {
           user_id: userId,
-          code_id: codeId,
+          code_id: code.id,
         },
       });
 
@@ -171,7 +167,7 @@ export class CodeRepository {
         userId,
         code.reward_coin,
         'CODE_REDEMPTION',
-        codeId = code.id,
+        { codeId: code.id }
       );
 
       return [redemption, transaction, wallet];

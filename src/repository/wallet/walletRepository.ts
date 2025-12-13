@@ -45,8 +45,10 @@ export class WalletRepository {
     userId: string,
     amount: number,
     transactionType: 'CODE_REDEMPTION' | 'GIFT' | 'ADMIN_ADJUSTMENT',
-    codeId?: number,
-    senderId?: string,
+    options?: {
+      codeId?: number;
+      senderId?: string;
+    },
   ) {
     return await prisma.$transaction([
       prisma.wallet.update({
@@ -65,8 +67,8 @@ export class WalletRepository {
           recipient_user_id: userId,
           coin_amount: amount,
           type: transactionType,
-          related_code_id: (transactionType === 'CODE_REDEMPTION' && codeId !== undefined) ? codeId : null,
-          sender_user_id: (transactionType === 'GIFT' && senderId) ? senderId : userId,
+          related_code_id: (transactionType === 'CODE_REDEMPTION' && options?.codeId !== undefined) ? options.codeId : null,
+          sender_user_id: (transactionType === 'GIFT' && options?.senderId) ? options.senderId : userId,
         },
       }),
     ]

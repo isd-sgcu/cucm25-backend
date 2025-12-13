@@ -1,6 +1,5 @@
 import { CodeRepository } from '@/repository/code/codeRepository';
 import { AppError } from '@/types/error/AppError';
-import { Prisma } from '@prisma/client';
 import {
   ROLE_MAPPINGS,
   DATABASE_ROLES,
@@ -124,7 +123,7 @@ export class CodeUsecase implements ICodeUsecase {
       throw new AppError(`This code is only for ${code.target_role} role`, 403);
     }
 
-    const [redemption, transaction, wallet] = await this.codeRepository.redeemCode(userId, code.id);
+    const [redemption, transaction, wallet] = await this.codeRepository.redeemCode(userId, code);
 
     return {
       success: true,
