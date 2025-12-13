@@ -59,13 +59,14 @@ enum EducationLevel {
 }
 
 model Transaction {
-  id                Int       @id @default(autoincrement())
-  sender_user_id    String?   @db.Uuid
-  recipient_user_id String?   @db.Uuid
-  type              String    @db.VarChar(50)
-  coin_amount       Int       @default(0)
+  id                Int             @id @default(autoincrement())
+  sender_user_id    String?         @db.Uuid
+  recipient_user_id String?         @db.Uuid
+  old_type       String?         @db.VarChar(50)
+  type              TransactionType @map("type") @default(LEGACY_UNDEFINED)
+  coin_amount       Int             @default(0)
   related_code_id   Int?
-  created_at        DateTime? @default(now()) @db.Timestamp(6)
+  created_at        DateTime?       @default(now()) @db.Timestamp(6)
 
   // Relations
   recipient   User? @relation("TransactionRecipient", fields: [recipient_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -73,6 +74,17 @@ model Transaction {
   sender      User? @relation("TransactionSender", fields: [sender_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@map("transactions")
+}
+
+enum TransactionType {
+  ADMIN_ADJUSTMENT
+  CODE_REDEMPTION
+  GIFT
+  PAYMENT
+  TICKET_PURCHASE
+  LEGACY_UNDEFINED
+
+  @@map("transaction_type")
 }
 
 model Wallet {
@@ -140,14 +152,14 @@ model SystemSetting {
 
 model TicketPurchase {
   id           String   @id @default(uuid()) @db.Uuid
-  event_name   String?   @db.VarChar(255)
+  event_name   String?  @db.VarChar(255)
   count        Int
   ticket_price Int
   total_price  Int
   purchase_at  DateTime @default(now()) @db.Timestamptz()
   user_id      String   @db.Uuid
 
-  user         User     @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  user User @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([purchase_at])
   @@map("ticket_purchases")
