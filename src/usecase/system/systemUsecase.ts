@@ -58,9 +58,6 @@ export class SystemUsecase implements ISystemUsecase {
       SYSTEM_SETTINGS.JUNIOR_LOGIN_ENABLED as SettingKey,
       SYSTEM_SETTINGS.MOD_LOGIN_ENABLED as SettingKey,
       SYSTEM_SETTINGS.SENIOR_LOGIN_ENABLED as SettingKey,
-      // SYSTEM_SETTINGS.GIFT_HOURLY_QUOTA as SettingKey,
-      // FIXME: Uncomment when ticket price setting is implemented
-      // SYSTEM_SETTINGS.TICKET_PRICE as SettingKey
     ];
 
     if (!validKeys.includes(data.settingKey as SettingKey)) {
@@ -68,17 +65,9 @@ export class SystemUsecase implements ISystemUsecase {
     }
 
     let settingValue: string;
-    // if (data.settingKey === 'gift_hourly_quota') {
-    //   // For quota, enabled=true means default value, enabled=false means disabled
-    //   settingValue = data.enabled
-    //     ? GIFT_SYSTEM.DEFAULT_HOURLY_QUOTA.toString()
-    //     : GIFT_SYSTEM.DISABLED_QUOTA.toString();
-    // } else {
-    //   // For boolean settings
     settingValue = data.enabled
       ? SYSTEM_DEFAULTS.BOOLEAN_ENABLED
       : SYSTEM_DEFAULTS.BOOLEAN_DISABLED;
-    // }
 
     const updatedSetting = await this.systemRepository.updateSystemSetting(
       data.settingKey as SettingKey,

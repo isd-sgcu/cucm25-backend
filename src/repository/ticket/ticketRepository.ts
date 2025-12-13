@@ -32,7 +32,7 @@ export class TicketRepository {
 
     const time = new Date();
 
-    await this.walletRepository.deductCoins(userId, totalCost);
+    await this.walletRepository.deductCoins(userId, totalCost, 'TICKET_PURCHASE');
 
     await prisma.ticketPurchase.create({
       data: {
