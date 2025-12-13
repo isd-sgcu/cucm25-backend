@@ -1,49 +1,18 @@
-import { PrismaClient, Prisma } from '@prisma/client';
+import { Prisma, CodeRedemption, Transaction, Wallet } from '@prisma/client';
 import { randomInt } from 'crypto';
 import { AppError } from '@/types/error/AppError';
 import { BUSINESS_RULES } from '@/constant/systemConfig';
 import { logger } from '@/utils/logger';
+import { prisma } from '@/lib/prisma';
+import { WalletRepository } from '../wallet/walletRepository';
 
-export interface ICodeRepository {
-  generateUniqueCodeString(): Promise<string>;
 
-  createCode(data: {
-    codeString: string;
-    targetRole: string;
-    activityName: string;
-    rewardCoin: number;
-    createdByUserId: string;
-    expiresAt: Date;
-  }): Promise<any>;
+export class CodeRepository {
+  private WalletRepository: WalletRepository;
 
-  findCodeByString(codeString: string): Promise<any | null>;
-
-  findCodeWithCreator(codeString: string): Promise<any | null>;
-
-  checkIfUserRedeemedCode(userId: string, codeId: number): Promise<boolean>;
-
-  createRedemption(userId: string, codeId: number): Promise<any>;
-
-  updateWalletBalance(userId: string, newBalance: number): Promise<any | null>;
-
-  getWalletByUserId(userId: string): Promise<any | null>;
-
-  createTransaction(data: {
-    recipientUserId: string;
-    type: string;
-    coinAmount: number;
-    relatedCodeId: number;
-  }): Promise<any>;
-
-  getUserWithRole(userId: string): Promise<any | null>;
-
-  executeTransaction<T>(
-    callback: (prisma: Prisma.TransactionClient) => Promise<T>,
-  ): Promise<T>;
-}
-
-export class CodeRepository implements ICodeRepository {
-  constructor(private prisma: PrismaClient) {}
+  constructor(walletRepository?: WalletRepository) {
+    this.WalletRepository = walletRepository || new WalletRepository();
+  }
 
   async generateUniqueCodeString(): Promise<string> {
     const MAX_RETRIES = BUSINESS_RULES.CODE_GENERATION.MAX_RETRIES;
@@ -129,19 +98,19 @@ export class CodeRepository implements ICodeRepository {
       created_by_user_id: data.createdByUserId,
     };
 
-    return await this.prisma.code.create({
+    return await prisma.code.create({
       data: createData,
     });
   }
 
   async findCodeByString(codeString: string): Promise<any | null> {
-    return await this.prisma.code.findUnique({
+    return await prisma.code.findUnique({
       where: { code_string: codeString },
     });
   }
 
   async findCodeWithCreator(codeString: string): Promise<any | null> {
-    return await this.prisma.code.findUnique({
+    return await prisma.code.findUnique({
       where: { code_string: codeString },
       include: { creator: true },
     });
@@ -151,7 +120,7 @@ export class CodeRepository implements ICodeRepository {
     userId: string,
     codeId: number,
   ): Promise<boolean> {
-    const redemption = await this.prisma.codeRedemption.findUnique({
+    const redemption = await prisma.codeRedemption.findUnique({
       where: {
         user_id_code_id: {
           user_id: userId,
@@ -163,7 +132,7 @@ export class CodeRepository implements ICodeRepository {
   }
 
   async createRedemption(userId: string, codeId: number): Promise<any> {
-    return await this.prisma.codeRedemption.create({
+    return await prisma.codeRedemption.create({
       data: {
         user_id: userId,
         code_id: codeId,
@@ -171,11 +140,49 @@ export class CodeRepository implements ICodeRepository {
     });
   }
 
+  async redeemCode(userId: string, codeId: number): Promise<[CodeRedemption, Transaction, Wallet]> {
+    const code = await this.findCodeByString(codeId.toString());
+    if (!code) {
+      throw new AppError('Code not found', 404);
+    }
+
+    const existingRedemption = await prisma.codeRedemption.findUnique({
+      where: {
+        user_id_code_id: {
+          user_id: userId,
+          code_id: codeId,
+        },
+      },
+    });
+
+    if (existingRedemption) {
+      throw new AppError('You have already redeemed this code', 400);
+    }
+
+    return await prisma.$transaction(async (tx) => {
+      const redemption = await tx.codeRedemption.create({
+        data: {
+          user_id: userId,
+          code_id: codeId,
+        },
+      });
+
+      const [wallet, transaction] = await this.WalletRepository.addCoins(
+        userId,
+        code.reward_coin,
+        'CODE_REDEMPTION',
+        codeId = code.id,
+      );
+
+      return [redemption, transaction, wallet];
+    });
+  }
+
   async updateWalletBalance(
     userId: string,
     newBalance: number,
   ): Promise<any | null> {
-    return await this.prisma.wallet.update({
+    return await prisma.wallet.update({
       where: { user_id: userId },
       data: {
         coin_balance: newBalance,
@@ -185,29 +192,13 @@ export class CodeRepository implements ICodeRepository {
   }
 
   async getWalletByUserId(userId: string): Promise<any | null> {
-    return await this.prisma.wallet.findUnique({
+    return await prisma.wallet.findUnique({
       where: { user_id: userId },
     });
   }
 
-  async createTransaction(data: {
-    recipientUserId: string;
-    type: string;
-    coinAmount: number;
-    relatedCodeId: number;
-  }): Promise<any> {
-    return await this.prisma.transaction.create({
-      data: {
-        recipient_user_id: data.recipientUserId,
-        type: data.type,
-        coin_amount: data.coinAmount,
-        related_code_id: data.relatedCodeId,
-      },
-    });
-  }
-
   async getUserWithRole(userId: string): Promise<any | null> {
-    return await this.prisma.user.findUnique({
+    return await prisma.user.findUnique({
       where: { id: userId },
     });
   }
@@ -215,6 +206,6 @@ export class CodeRepository implements ICodeRepository {
   async executeTransaction<T>(
     callback: (prisma: Prisma.TransactionClient) => Promise<T>,
   ): Promise<T> {
-    return await this.prisma.$transaction(callback);
+    return await prisma.$transaction(callback);
   }
 }
