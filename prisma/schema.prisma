@@ -62,8 +62,8 @@ model Transaction {
   id                Int             @id @default(autoincrement())
   sender_user_id    String?         @db.Uuid
   recipient_user_id String?         @db.Uuid
-  old_type       String?         @db.VarChar(50)
-  type              TransactionType @map("type") @default(LEGACY_UNDEFINED)
+  old_type          String?         @db.VarChar(50)
+  type              TransactionType @default(LEGACY_UNDEFINED) @map("type")
   coin_amount       Int             @default(0)
   related_code_id   Int?
   created_at        DateTime?       @default(now()) @db.Timestamp(6)
@@ -88,11 +88,12 @@ enum TransactionType {
 }
 
 model Wallet {
-  user_id              String   @id @db.Uuid
-  coin_balance         Int      @default(0)
-  cumulative_coin      Int      @default(0)
-  gift_sends_remaining Int      @default(5)
-  updated_at           DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
+  user_id              String    @id @db.Uuid
+  coin_balance         Int       @default(0)
+  cumulative_coin      Int       @default(0)
+  gift_sends           Int       @default(5)
+  last_gift_reset      DateTime? @map("last_gift_reset") @db.Timestamptz()
+  updated_at           DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
   users                User?
 
   @@index([coin_balance])

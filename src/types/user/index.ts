@@ -12,7 +12,7 @@ export interface ParsedUser {
   school: string;
   wallets?: {
     coin_balance: number;
-    gift_sends_remaining: number;
+    gift_sends_remaining?: number;
   };
   answers?: Array<{ questionId: string; answer: string }>;
 }
