@@ -28,6 +28,7 @@ export interface RedeemCodeResponse {
   rewardCoin: number;
   newBalance: number;
   transactionId: number;
+  redeemedAt?: string;
 }
 
 export interface CodeWithCreator {

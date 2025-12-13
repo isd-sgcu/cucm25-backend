@@ -24,5 +24,11 @@ export default function systemRouter() {
     systemController.getSystemStatus.bind(systemController),
   );
 
+  router.patch(
+    '/set',
+    authMiddleware,
+    systemController.setSystemSetting.bind(systemController),
+  )
+
   return router;
 }

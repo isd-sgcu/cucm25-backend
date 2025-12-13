@@ -10,7 +10,11 @@ export class WalletRepository {
     });
   }
 
-  async deductCoins(userId: string, amount: number) {
+  async deductCoins(
+    userId: string,
+    amount: number,
+    transactionType: 'PAYMENT' | 'TICKET_PURCHASE' | 'ADMIN_ADJUSTMENT' = 'PAYMENT',
+  ) {
     const userWallet = await this.getUserWallet(userId);
     if (!userWallet || userWallet.coin_balance < amount) {
       throw new AppError('Insufficient coin balance', 400);
@@ -28,8 +32,8 @@ export class WalletRepository {
       prisma.transaction.create({
         data: {
           sender_user_id: userId,
-          coin_amount: amount,
-          type: 'SPEND',
+          coin_amount: -amount,
+          type: transactionType,
         },
       }),
     ]);
@@ -37,17 +41,35 @@ export class WalletRepository {
     return wallet;
   }
 
-  async addCoins(userId: string, amount: number) {
-    return await prisma.wallet.update({
-      where: { user_id: userId },
-      data: {
-        coin_balance: {
-          increment: amount,
+  async addCoins(
+    userId: string,
+    amount: number,
+    transactionType: 'CODE_REDEMPTION' | 'GIFT' | 'ADMIN_ADJUSTMENT',
+    codeId?: number,
+    senderId?: string,
+  ) {
+    return await prisma.$transaction([
+      prisma.wallet.update({
+        where: { user_id: userId },
+        data: {
+          coin_balance: {
+            increment: amount,
+          },
+          cumulative_coin: {
+            increment: amount,
+          },
         },
-        cumulative_coin: {
-          increment: amount,
+      }),
+      prisma.transaction.create({
+        data: {
+          recipient_user_id: userId,
+          coin_amount: amount,
+          type: transactionType,
+          related_code_id: (transactionType === 'CODE_REDEMPTION' && codeId !== undefined) ? codeId : null,
+          sender_user_id: (transactionType === 'GIFT' && senderId) ? senderId : userId,
         },
-      },
-    });
+      }),
+    ]
+    );
   }
 }

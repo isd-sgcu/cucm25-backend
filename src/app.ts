@@ -17,7 +17,7 @@ app.use(
       /^https?:\/\/sso\.comucos\.com(:[0-9]{1,5})?$/,
       /^https?:\/\/(.+\.)?cucm25\.me(:[0-9]{1,5})?$/,
     ],
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,
   }),

@@ -11,6 +11,7 @@ import {
   SystemToggleResponse,
   SystemStatusResponse,
   SettingKey,
+  SettingRequest,
 } from '@/types/system';
 
 export interface ISystemUsecase {
@@ -22,6 +23,15 @@ export interface ISystemUsecase {
   getSystemStatus(): Promise<SystemStatusResponse>;
 
   checkSystemAvailability(userRole?: string): Promise<boolean>;
+
+  setSystemSetting(
+    adminUserId: string,
+    body: SettingRequest,
+  ): Promise<{
+    success: boolean;
+    message: string;
+    newSettings: any[];
+  }>;
 }
 
 export class SystemUsecase implements ISystemUsecase {
@@ -47,9 +57,6 @@ export class SystemUsecase implements ISystemUsecase {
       SYSTEM_SETTINGS.JUNIOR_LOGIN_ENABLED as SettingKey,
       SYSTEM_SETTINGS.MOD_LOGIN_ENABLED as SettingKey,
       SYSTEM_SETTINGS.SENIOR_LOGIN_ENABLED as SettingKey,
-      SYSTEM_SETTINGS.GIFT_HOURLY_QUOTA as SettingKey,
-      // FIXME: Uncomment when ticket price setting is implemented
-      // SYSTEM_SETTINGS.TICKET_PRICE as SettingKey
     ];
 
     if (!validKeys.includes(data.settingKey as SettingKey)) {
@@ -57,17 +64,9 @@ export class SystemUsecase implements ISystemUsecase {
     }
 
     let settingValue: string;
-    if (data.settingKey === 'gift_hourly_quota') {
-      // For quota, enabled=true means default value, enabled=false means disabled
-      settingValue = data.enabled
-        ? GIFT_SYSTEM.DEFAULT_HOURLY_QUOTA.toString()
-        : GIFT_SYSTEM.DISABLED_QUOTA.toString();
-    } else {
-      // For boolean settings
-      settingValue = data.enabled
-        ? SYSTEM_DEFAULTS.BOOLEAN_ENABLED
-        : SYSTEM_DEFAULTS.BOOLEAN_DISABLED;
-    }
+    settingValue = data.enabled
+      ? SYSTEM_DEFAULTS.BOOLEAN_ENABLED
+      : SYSTEM_DEFAULTS.BOOLEAN_DISABLED;
 
     const updatedSetting = await this.systemRepository.updateSystemSetting(
       data.settingKey as SettingKey,
@@ -80,6 +79,45 @@ export class SystemUsecase implements ISystemUsecase {
       settingKey: data.settingKey,
       enabled: data.enabled,
       updatedAt: updatedSetting.updated_at.toISOString(),
+    };
+  }
+
+  async setSystemSetting(
+    adminUserId: string,
+    body: SettingRequest,
+  ): Promise<{
+    success: boolean;
+    message: string;
+    newSettings: any[];
+  }> {
+    const user = await this.systemRepository.getUserWithRole(adminUserId);
+    if (!user) {
+      throw new AppError('User not found', 404);
+    }
+
+    const userRole = user.role;
+    if (userRole !== 'ADMIN') {
+      throw new AppError('Only administrators can modify system settings', 403);
+    }
+
+    if (Object.keys(body).length === 0) {
+      throw new AppError('No settings provided to update', 400);
+    }
+
+    for (const [key, value] of Object.entries(body)) {
+      if (!(key.toUpperCase() in SYSTEM_SETTINGS)) {
+        throw new AppError(`Invalid setting key: ${key}`, 400);
+      }
+
+      await this.systemRepository.updateSystemSetting(key as SettingKey, value.toString());
+    }
+
+    const updatedSetting = await this.systemRepository.getAllSystemSettings();
+    
+    return {
+      success: true,
+      message: `Settings updated successfully`,
+      newSettings: updatedSetting,
     };
   }
 
@@ -97,13 +135,16 @@ export class SystemUsecase implements ISystemUsecase {
     return {
       juniorLoginEnabled:
         settingsMap.get(SYSTEM_SETTINGS.JUNIOR_LOGIN_ENABLED) ===
-        SYSTEM_DEFAULTS.BOOLEAN_ENABLED,
+        SYSTEM_DEFAULTS.BOOLEAN_ENABLED || 
+        SYSTEM_DEFAULTS.JUNIOR_LOGIN_ENABLED,
       modLoginEnabled:
         settingsMap.get(SYSTEM_SETTINGS.MOD_LOGIN_ENABLED) ===
-        SYSTEM_DEFAULTS.BOOLEAN_ENABLED,
+        SYSTEM_DEFAULTS.BOOLEAN_ENABLED || 
+        SYSTEM_DEFAULTS.MOD_LOGIN_ENABLED,
       seniorLoginEnabled:
         settingsMap.get(SYSTEM_SETTINGS.SENIOR_LOGIN_ENABLED) ===
-        SYSTEM_DEFAULTS.BOOLEAN_ENABLED,
+        SYSTEM_DEFAULTS.BOOLEAN_ENABLED ||
+        SYSTEM_DEFAULTS.SENIOR_LOGIN_ENABLED,
       giftHourlyQuota: parseInt(
         settingsMap.get(SYSTEM_SETTINGS.GIFT_HOURLY_QUOTA) ||
           SYSTEM_DEFAULTS.GIFT_QUOTA,

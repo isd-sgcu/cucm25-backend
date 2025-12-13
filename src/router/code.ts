@@ -7,7 +7,7 @@ import { prisma } from '@/lib/prisma';
 
 export default function codeRouter() {
   const router = Router();
-  const codeRepository = new CodeRepository(prisma);
+  const codeRepository = new CodeRepository();
   const codeUsecase = new CodeUsecase(codeRepository);
   const codeController = new CodeController(codeUsecase);
 
