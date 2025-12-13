@@ -70,20 +70,9 @@ export class SystemController {
         return;
       }
       
-      const { settingKey, value } = req.body;
-
-      // Validation
-      if (!settingKey || value === undefined) {
-        res.status(400).json({
-          error: 'Missing required fields: settingKey, value',
-        });
-        return;
-      }
-      
       const result = await this.systemUsecase.setSystemSetting(
         adminUserId,
-        settingKey,
-        value,
+        req.body,
       );
       
       res.status(200).json({
