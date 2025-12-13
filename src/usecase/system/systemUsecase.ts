@@ -135,16 +135,13 @@ export class SystemUsecase implements ISystemUsecase {
     return {
       juniorLoginEnabled:
         settingsMap.get(SYSTEM_SETTINGS.JUNIOR_LOGIN_ENABLED) ===
-        SYSTEM_DEFAULTS.BOOLEAN_ENABLED || 
-        SYSTEM_DEFAULTS.JUNIOR_LOGIN_ENABLED,
+        SYSTEM_DEFAULTS.BOOLEAN_ENABLED,
       modLoginEnabled:
         settingsMap.get(SYSTEM_SETTINGS.MOD_LOGIN_ENABLED) ===
-        SYSTEM_DEFAULTS.BOOLEAN_ENABLED || 
-        SYSTEM_DEFAULTS.MOD_LOGIN_ENABLED,
+        SYSTEM_DEFAULTS.BOOLEAN_ENABLED,
       seniorLoginEnabled:
         settingsMap.get(SYSTEM_SETTINGS.SENIOR_LOGIN_ENABLED) ===
-        SYSTEM_DEFAULTS.BOOLEAN_ENABLED ||
-        SYSTEM_DEFAULTS.SENIOR_LOGIN_ENABLED,
+        SYSTEM_DEFAULTS.BOOLEAN_ENABLED,
       giftHourlyQuota: parseInt(
         settingsMap.get(SYSTEM_SETTINGS.GIFT_HOURLY_QUOTA) ||
           SYSTEM_DEFAULTS.GIFT_QUOTA,
