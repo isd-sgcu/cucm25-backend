@@ -58,6 +58,29 @@ export class UserUsecase {
     await this.walletRepository.deductCoins(authUser.id, amount);
   }
 
+  async adjustCoins(authUser: AuthUser, username: string, amount: number, action: 'increment' | 'decrement'): Promise<void> {
+    if (authUser.role !== RoleType.ADMIN) {
+      throw new AppError('Insufficient Permissions', 403);
+    }
+    
+    if (amount <= 0) {
+      throw new AppError('Invalid amount', 400);
+    }
+
+    const user = await this.userRepository.getUser({ username });
+    if (!user) {
+      throw new AppError('User does not exist', 404);
+    }
+
+    if (action === 'increment') {
+      await this.walletRepository.addCoins(user.id, amount, 'ADMIN_ADJUSTMENT');
+    } else if (action === 'decrement') {
+      await this.walletRepository.deductCoins(user.id, amount, 'ADMIN_ADJUSTMENT');
+    } else {
+      throw new AppError('Invalid action', 400);
+    }
+  }
+
   private validateGetUserRequest(
     authUser: AuthUser,
     params: GetRequestParams,
