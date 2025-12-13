@@ -24,7 +24,7 @@ export default function systemRouter() {
     systemController.getSystemStatus.bind(systemController),
   );
 
-  router.put(
+  router.patch(
     '/set',
     authMiddleware,
     systemController.setSystemSetting.bind(systemController),

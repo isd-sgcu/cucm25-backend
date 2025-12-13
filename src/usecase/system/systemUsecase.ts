@@ -11,6 +11,7 @@ import {
   SystemToggleResponse,
   SystemStatusResponse,
   SettingKey,
+  SettingRequest,
 } from '@/types/system';
 
 export interface ISystemUsecase {
@@ -25,13 +26,11 @@ export interface ISystemUsecase {
 
   setSystemSetting(
     adminUserId: string,
-    key: SettingKey,
-    value: string,
+    body: SettingRequest,
   ): Promise<{
     success: boolean;
     message: string;
-    settingKey: string;
-    settingValue: string;
+    newSettings: any[];
   }>;
 }
 
@@ -85,13 +84,11 @@ export class SystemUsecase implements ISystemUsecase {
 
   async setSystemSetting(
     adminUserId: string,
-    key: SettingKey,
-    value: string,
+    body: SettingRequest,
   ): Promise<{
     success: boolean;
     message: string;
-    settingKey: string;
-    settingValue: string;
+    newSettings: any[];
   }> {
     const user = await this.systemRepository.getUserWithRole(adminUserId);
     if (!user) {
@@ -103,25 +100,24 @@ export class SystemUsecase implements ISystemUsecase {
       throw new AppError('Only administrators can modify system settings', 403);
     }
 
-    const validKeys: SettingKey[] = [
-      SYSTEM_SETTINGS.GIFT_HOURLY_QUOTA as SettingKey,
-      SYSTEM_SETTINGS.TICKET_PRICE as SettingKey,
-    ];
-
-    if (!validKeys.includes(key)) {
-      throw new AppError('Invalid setting key for this operation', 400);
+    if (Object.keys(body).length === 0) {
+      throw new AppError('No settings provided to update', 400);
     }
 
-    const updatedSetting = await this.systemRepository.updateSystemSetting(
-      key,
-      String(value)
-    );
+    for (const [key, value] of Object.entries(body)) {
+      if (!(key.toUpperCase() in SYSTEM_SETTINGS)) {
+        throw new AppError(`Invalid setting key: ${key}`, 400);
+      }
+
+      await this.systemRepository.updateSystemSetting(key as SettingKey, value.toString());
+    }
+
+    const updatedSetting = await this.systemRepository.getAllSystemSettings();
     
     return {
       success: true,
-      message: `Setting ${key} updated successfully`,
-      settingKey: key,
-      settingValue: updatedSetting.setting_value,
+      message: `Settings updated successfully`,
+      newSettings: updatedSetting,
     };
   }
 
