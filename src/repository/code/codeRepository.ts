@@ -171,6 +171,7 @@ export class CodeRepository {
         userId,
         code.reward_coin,
         'CODE_REDEMPTION',
+        codeId = code.id,
       );
 
       return [redemption, transaction, wallet];
