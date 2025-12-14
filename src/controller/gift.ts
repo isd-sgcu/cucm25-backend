@@ -1,5 +1,5 @@
 import { AppError } from '@/types/error/AppError';
-import { GiftUsecase } from '@/usecase/gift/giftUsecase';
+import { GiftUsecase } from '@/usecase/gift';
 import { logger } from '@/utils/logger';
 import type { Request, Response } from 'express';
 

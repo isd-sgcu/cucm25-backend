@@ -1,8 +1,8 @@
-import { TicketController } from '@/controller/ticket/ticketController';
+import { TicketController } from '@/controller/ticket';
 import { authMiddleware } from '@/middleware/authMiddleware';
-import { TicketRepository } from '@/repository/ticket/ticketRepository';
-import { WalletRepository } from '@/repository/wallet/walletRepository';
-import { TicketUsecase } from '@/usecase/ticket/ticketUsecase';
+import { TicketRepository } from '@/repository/ticket';
+import { WalletRepository } from '@/repository/wallet';
+import { TicketUsecase } from '@/usecase/ticket';
 import { Router } from 'express';
 
 export default function ticketRouter() {

@@ -1,13 +1,12 @@
-import { SystemController } from '@/controller/system/systemController';
-import { SystemRepository } from '@/repository/system/systemRepository';
-import { SystemUsecase } from '@/usecase/system/systemUsecase';
+import { SystemController } from '@/controller/system';
+import { SystemRepository } from '@/repository/system';
+import { SystemUsecase } from '@/usecase/system';
 import { authMiddleware } from '@/middleware/authMiddleware';
 import { Router } from 'express';
-import { prisma } from '@/lib/prisma';
 
 export default function systemRouter() {
   const router = Router();
-  const systemRepository = new SystemRepository(prisma);
+  const systemRepository = new SystemRepository();
   const systemUsecase = new SystemUsecase(systemRepository);
   const systemController = new SystemController(systemUsecase);
 

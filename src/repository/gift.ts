@@ -1,6 +1,5 @@
 import { GIFT_SYSTEM, SYSTEM_DEFAULTS } from "@/constant/systemConfig";
-import { WalletRepository } from "../wallet/walletRepository";
-import { User } from "@prisma/client";
+import { WalletRepository } from "@/repository/wallet";
 import { prisma } from "@/lib/prisma";
 
 export class GiftRepository {
@@ -36,7 +35,7 @@ export class GiftRepository {
   async sendGift(senderId: string, recipientId: string): Promise<void> {
 
     await prisma.$transaction(async (tx) => {
-      await tx.wallet.update({
+      const wallet = await tx.wallet.update({
         where: { user_id: senderId },
         data: {
           gift_sends: {
@@ -44,6 +43,8 @@ export class GiftRepository {
           },
         },
       });
+
+      console.log('Updated sender wallet:', wallet);
 
       await this.walletRepository.addCoins(
         recipientId,

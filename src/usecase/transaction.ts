@@ -1,4 +1,4 @@
-import { TransactionRepository } from '@/repository/transaction/transactionRepository';
+import { TransactionRepository } from '@/repository/transaction';
 import { AuthUser } from '@/types/auth';
 import { AppError } from '@/types/error/AppError';
 import { CoinHistoryRecord, GiftHistoryRecord } from '@/types/transaction';

@@ -7,7 +7,7 @@ class PrismaManager {
     if (!PrismaManager.instance) {
       if (process.env.NODE_ENV === 'development') {
         PrismaManager.instance = new PrismaClient({
-          log: ['query', 'error', 'warn'],
+          // log: ['query', 'error', 'warn'],
         });
       } else {
         PrismaManager.instance = new PrismaClient({

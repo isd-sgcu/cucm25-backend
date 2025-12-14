@@ -1,7 +1,7 @@
-import { LeaderboardController } from '@/controller/leaderboard/leaderboardController';
+import { LeaderboardController } from '@/controller/leaderboard';
 import { authMiddleware } from '@/middleware/authMiddleware';
-import { UserRepository } from '@/repository/user/userRepository';
-import { LeaderboardUsecase } from '@/usecase/leaderboard/leaderboardUsecase';
+import { UserRepository } from '@/repository/user';
+import { LeaderboardUsecase } from '@/usecase/leaderboard';
 import { Router } from 'express';
 
 export default function leaderboardRouter() {

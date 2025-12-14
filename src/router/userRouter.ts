@@ -1,8 +1,8 @@
-import { UserController } from '@/controller/user/userController';
+import { UserController } from '@/controller/user';
 import { authMiddleware } from '@/middleware/authMiddleware';
-import { UserRepository } from '@/repository/user/userRepository';
-import { WalletRepository } from '@/repository/wallet/walletRepository';
-import { UserUsecase } from '@/usecase/user/userUsecase';
+import { UserRepository } from '@/repository/user';
+import { WalletRepository } from '@/repository/wallet';
+import { UserUsecase } from '@/usecase/user';
 import { Router } from 'express';
 
 export default function userRouter() {

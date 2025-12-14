@@ -1,7 +1,7 @@
-import { AuthController } from '@/controller/auth/authController';
+import { AuthController } from '@/controller/auth';
 import { authMiddleware } from '@/middleware/authMiddleware';
-import { UserRepository } from '@/repository/user/userRepository';
-import { AuthUsecase } from '@/usecase/auth/authUsecase';
+import { UserRepository } from '@/repository/user';
+import { AuthUsecase } from '@/usecase/auth';
 import { Router } from 'express';
 
 export default function authRouter() {

@@ -1,7 +1,7 @@
-import { TransactionController } from '@/controller/transaction/transactionController';
+import { TransactionController } from '@/controller/transaction';
 import { authMiddleware } from '@/middleware/authMiddleware';
-import { TransactionRepository } from '@/repository/transaction/transactionRepository';
-import { TransactionUsecase } from '@/usecase/transaction/transactionUsecase';
+import { TransactionRepository } from '@/repository/transaction';
+import { TransactionUsecase } from '@/usecase/transaction';
 import { Router } from 'express';
 
 export default function transactionRouter() {

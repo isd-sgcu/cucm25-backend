@@ -1,4 +1,4 @@
-import { UserRepository } from '@/repository/user/userRepository';
+import { UserRepository } from '@/repository/user';
 import { ParsedUser } from '@/types/user/index';
 import { getKeycloakToken } from '@/lib/api';
 import { verifyKeycloakJwt, signJwt } from '@/utils/jwt';

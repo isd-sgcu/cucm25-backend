@@ -2,7 +2,7 @@ import { prisma } from '@/lib/prisma';
 import type { OnboardingAnswers, ParsedUser } from '@/types/user';
 import { Prisma, User } from '@prisma/client';
 import type { LeaderboardUser } from '@/types/leaderboard';
-import { LeaderboardFilter } from '../../types/leaderboard/index';
+import { LeaderboardFilter } from '@/types/leaderboard/index';
 import { SYSTEM_DEFAULTS } from '@/constant/systemConfig';
 
 export class UserRepository {
@@ -38,6 +38,8 @@ export class UserRepository {
           coin_balance: number;
           cumulative_coin: number;
           gift_sends_remaining: number;
+          gift_sends: number;
+          last_gift_reset: Date | null;
         };
       })
     | null
@@ -69,11 +71,13 @@ export class UserRepository {
 
     const startOfCurrentHour = new Date();
     startOfCurrentHour.setMinutes(0, 0, 0);
+    startOfCurrentHour.setHours(startOfCurrentHour.getHours()-1);
 
     if (
       !user.wallets.last_gift_reset ||
       user.wallets.last_gift_reset < startOfCurrentHour
     ) {
+      console.log('Resetting gift sends for user:', user.id);
       user = await prisma.user.update({
         where: { id: user.id },
         data: {
@@ -103,6 +107,8 @@ export class UserRepository {
         coin_balance: user.wallets.coin_balance,
         cumulative_coin: user.wallets.cumulative_coin,
         gift_sends_remaining: (quota - user.wallets.gift_sends),
+        gift_sends: user.wallets.gift_sends,
+        last_gift_reset: user.wallets.last_gift_reset,
       },
     };
   }

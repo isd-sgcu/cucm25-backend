@@ -1,6 +1,6 @@
-import { CodeController } from '@/controller/code/codeController';
-import { CodeRepository } from '@/repository/code/codeRepository';
-import { CodeUsecase } from '@/usecase/code/codeUsecase';
+import { CodeController } from '@/controller/code';
+import { CodeRepository } from '@/repository/code';
+import { CodeUsecase } from '@/usecase/code';
 import { authMiddleware } from '@/middleware/authMiddleware';
 import { Router } from 'express';
 import { prisma } from '@/lib/prisma';

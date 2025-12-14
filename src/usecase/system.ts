@@ -1,4 +1,3 @@
-import { ISystemRepository } from '@/repository/system/systemRepository';
 import { AppError } from '@/types/error/AppError';
 import {
   GIFT_SYSTEM,
@@ -13,6 +12,7 @@ import {
   SettingKey,
   SettingRequest,
 } from '@/types/system';
+import { SystemRepository } from '@/repository/system';
 
 export interface ISystemUsecase {
   toggleSystemSetting(
@@ -35,7 +35,7 @@ export interface ISystemUsecase {
 }
 
 export class SystemUsecase implements ISystemUsecase {
-  constructor(private systemRepository: ISystemRepository) {}
+  constructor(private systemRepository: SystemRepository) {}
 
   async toggleSystemSetting(
     data: SystemToggleRequest,

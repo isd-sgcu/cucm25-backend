@@ -1,4 +1,4 @@
-import { CodeRepository } from '@/repository/code/codeRepository';
+import { CodeRepository } from '@/repository/code';
 import { AppError } from '@/types/error/AppError';
 import {
   ROLE_MAPPINGS,

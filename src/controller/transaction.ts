@@ -1,5 +1,5 @@
 import { AppError } from '@/types/error/AppError';
-import { TransactionUsecase } from '@/usecase/transaction/transactionUsecase';
+import { TransactionUsecase } from '@/usecase/transaction';
 import { logger } from '@/utils/logger';
 import type { Request, Response } from 'express';
 

@@ -1,6 +1,6 @@
 import { SYSTEM_DEFAULTS } from '@/constant/systemConfig';
 import { prisma } from '@/lib/prisma';
-import { WalletRepository } from '../wallet/walletRepository';
+import { WalletRepository } from '@/repository/wallet';
 import { TicketPurchase } from '@prisma/client';
 
 export class TicketRepository {

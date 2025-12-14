@@ -10,7 +10,7 @@ import { AppError } from '@/types/error/AppError';
 import { BUSINESS_RULES } from '@/constant/systemConfig';
 import { logger } from '@/utils/logger';
 import { prisma } from '@/lib/prisma';
-import { WalletRepository } from '../wallet/walletRepository';
+import { WalletRepository } from '@/repository/wallet';
 
 export class CodeRepository {
   private WalletRepository: WalletRepository;

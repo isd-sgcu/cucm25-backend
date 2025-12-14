@@ -1,5 +1,5 @@
-import { UserRepository } from '@/repository/user/userRepository';
-import { WalletRepository } from '@/repository/wallet/walletRepository';
+import { UserRepository } from '@/repository/user';
+import { WalletRepository } from '@/repository/wallet';
 import { AuthUser } from '@/types/auth';
 import { AppError } from '@/types/error/AppError';
 import type { GetRequestParams } from '@/types/user/GET';

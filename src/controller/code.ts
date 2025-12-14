@@ -1,4 +1,4 @@
-import { ICodeUsecase } from '@/usecase/code/codeUsecase';
+import { ICodeUsecase } from '@/usecase/code';
 import { Request, Response } from 'express';
 import { AppError } from '@/types/error/AppError';
 import { logger } from '@/utils/logger';

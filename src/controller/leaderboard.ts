@@ -1,6 +1,6 @@
 import { AppError } from '@/types/error/AppError';
 import type { GetLeaderboardRequest } from '@/types/leaderboard/GET';
-import { LeaderboardUsecase } from '@/usecase/leaderboard/leaderboardUsecase';
+import { LeaderboardUsecase } from '@/usecase/leaderboard';
 import type { Response } from 'express';
 
 export class LeaderboardController {

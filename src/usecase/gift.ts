@@ -1,5 +1,5 @@
-import { GiftRepository } from '@/repository/gift/giftRepository';
-import { UserRepository } from '@/repository/user/userRepository';
+import { GiftRepository } from '@/repository/gift';
+import { UserRepository } from '@/repository/user';
 import { AuthUser } from '@/types/auth';
 import { ParsedUser } from '@/types/user';
 import { GIFT_SYSTEM } from '@/constant/systemConfig';

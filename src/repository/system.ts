@@ -1,33 +1,18 @@
 import { SettingKey } from '@/types/system';
-import { PrismaClient } from '@prisma/client';
 import { logger } from '@/utils/logger';
+import { prisma } from '@/lib/prisma';
 
-export interface ISystemRepository {
-  getSystemSetting(settingKey: SettingKey): Promise<any | null>;
-
-  getAllSystemSettings(): Promise<any[]>;
-
-  updateSystemSetting(
-    settingKey: SettingKey,
-    settingValue: string,
-  ): Promise<any>;
-
-  isSystemEnabled(settingKey: SettingKey): Promise<boolean>;
-
-  getUserWithRole(userId: string): Promise<any | null>;
-}
-
-export class SystemRepository implements ISystemRepository {
-  constructor(private prisma: PrismaClient) {}
+export class SystemRepository {
+  constructor() {}
 
   async getSystemSetting(settingKey: SettingKey): Promise<any | null> {
-    return await this.prisma.systemSetting.findUnique({
+    return await prisma.systemSetting.findUnique({
       where: { setting_key: settingKey },
     });
   }
 
   async getAllSystemSettings(): Promise<any[]> {
-    return await this.prisma.systemSetting.findMany({
+    return await prisma.systemSetting.findMany({
       orderBy: { setting_key: 'asc' },
     });
   }
@@ -36,7 +21,7 @@ export class SystemRepository implements ISystemRepository {
     settingKey: SettingKey,
     settingValue: string,
   ): Promise<any> {
-    return await this.prisma.systemSetting.upsert({
+    return await prisma.systemSetting.upsert({
       where: { setting_key: settingKey },
       update: {
         setting_value: settingValue,
@@ -66,7 +51,7 @@ export class SystemRepository implements ISystemRepository {
   }
 
   async getUserWithRole(userId: string): Promise<any | null> {
-    return await this.prisma.user.findUnique({
+    return await prisma.user.findUnique({
       where: { id: userId },
     });
   }

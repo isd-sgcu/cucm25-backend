@@ -1,6 +1,6 @@
 import { AuthenticatedRequest } from '@/types/auth/index';
 import { AppError } from '@/types/error/AppError';
-import { AuthUsecase } from '@/usecase/auth/authUsecase';
+import { AuthUsecase } from '@/usecase/auth';
 import type { Request, Response } from 'express';
 
 export class AuthController {

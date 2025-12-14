@@ -1,12 +1,11 @@
 import { Request, Response, NextFunction } from 'express';
-import { SystemRepository } from '@/repository/system/systemRepository';
-import { SystemUsecase } from '@/usecase/system/systemUsecase';
+import { SystemRepository } from '@/repository/system';
+import { SystemUsecase } from '@/usecase/system';
 import { verifyJwt } from '@/utils/jwt';
 import { logger } from '@/utils/logger';
 import { ROLE_MAPPINGS } from '@/constant/systemConfig';
-import { prisma } from '@/lib/prisma';
 
-const systemRepository = new SystemRepository(prisma);
+const systemRepository = new SystemRepository();
 const systemUsecase = new SystemUsecase(systemRepository);
 
 export async function checkSystemAvailability(

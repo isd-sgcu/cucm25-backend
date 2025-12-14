@@ -1,4 +1,4 @@
-import { ISystemUsecase } from '@/usecase/system/systemUsecase';
+import { ISystemUsecase } from '@/usecase/system';
 import { Request, Response } from 'express';
 import { AppError } from '@/types/error/AppError';
 import { logger } from '@/utils/logger';

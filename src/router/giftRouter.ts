@@ -1,7 +1,7 @@
-import { GiftController } from '@/controller/gift/giftController';
+import { GiftController } from '@/controller/gift';
 import { authMiddleware } from '@/middleware/authMiddleware';
-import { GiftRepository } from '@/repository/gift/giftRepository';
-import { GiftUsecase } from '@/usecase/gift/giftUsecase';
+import { GiftRepository } from '@/repository/gift';
+import { GiftUsecase } from '@/usecase/gift';
 import { Router } from 'express';
 
 export default function giftRouter() {

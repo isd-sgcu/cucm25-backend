@@ -1,5 +1,5 @@
-import { TicketRepository } from '@/repository/ticket/ticketRepository';
-import { WalletRepository } from '@/repository/wallet/walletRepository';
+import { TicketRepository } from '@/repository/ticket';
+import { WalletRepository } from '@/repository/wallet';
 import { AuthUser } from '@/types/auth';
 import { Parser } from '@json2csv/plainjs';
 import { TicketPurchase } from '@prisma/client';

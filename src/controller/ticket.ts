@@ -1,6 +1,6 @@
 import { AuthenticatedRequest } from '@/types/auth';
 import { AppError } from '@/types/error/AppError';
-import { TicketUsecase } from '@/usecase/ticket/ticketUsecase';
+import { TicketUsecase } from '@/usecase/ticket';
 import { RoleType } from '@prisma/client';
 import type { Request, Response } from 'express';
 

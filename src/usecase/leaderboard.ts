@@ -1,4 +1,4 @@
-import { UserRepository } from '@/repository/user/userRepository';
+import { UserRepository } from '@/repository/user';
 import { AppError } from '@/types/error/AppError';
 import type { LeaderboardFilter, LeaderboardUser } from '@/types/leaderboard';
 import { GetLeaderboardRequestQuery } from '@/types/leaderboard/GET';
