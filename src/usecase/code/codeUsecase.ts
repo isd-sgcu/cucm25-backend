@@ -6,6 +6,7 @@ import {
   TARGET_ROLES,
 } from '@/constant/systemConfig';
 import {
+  CodeHistoryResponse,
   GenerateCodeRequest,
   GenerateCodeResponse,
   RedeemCodeResponse,
@@ -17,6 +18,7 @@ export interface ICodeUsecase {
     creatorUserId: string,
   ): Promise<GenerateCodeResponse>;
   redeemCode(codeString: string, userId: string): Promise<RedeemCodeResponse>;
+  getCodeHistory(userId: string): Promise<CodeHistoryResponse>;
 }
 
 export class CodeUsecase implements ICodeUsecase {
@@ -123,7 +125,8 @@ export class CodeUsecase implements ICodeUsecase {
       throw new AppError(`This code is only for ${code.target_role} role`, 403);
     }
 
-    const [redemption, transaction, wallet] = await this.codeRepository.redeemCode(userId, code);
+    const [redemption, transaction, wallet] =
+      await this.codeRepository.redeemCode(userId, code);
 
     return {
       success: true,
@@ -133,5 +136,27 @@ export class CodeUsecase implements ICodeUsecase {
       transactionId: transaction.id,
       redeemedAt: redemption.redeemed_at!.toISOString(),
     };
+  }
+
+  async getCodeHistory(userId: string): Promise<CodeHistoryResponse> {
+    const user = await this.codeRepository.getUserWithRole(userId);
+    if (!user) {
+      throw new AppError('User not found', 404);
+    }
+
+    const userRole = user.role;
+    if (
+      userRole !== DATABASE_ROLES.MODERATOR &&
+      userRole !== DATABASE_ROLES.ADMIN
+    ) {
+      throw new AppError(
+        'Only moderators and admins can view generated codes',
+        403,
+      );
+    }
+
+    const data = await this.codeRepository.getSelfCreatedCodes(userId);
+
+    return data;
   }
 }

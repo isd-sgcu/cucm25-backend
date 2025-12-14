@@ -1,11 +1,16 @@
-import { Prisma, CodeRedemption, Transaction, Wallet, Code } from '@prisma/client';
+import {
+  Prisma,
+  CodeRedemption,
+  Transaction,
+  Wallet,
+  Code,
+} from '@prisma/client';
 import { randomInt } from 'crypto';
 import { AppError } from '@/types/error/AppError';
 import { BUSINESS_RULES } from '@/constant/systemConfig';
 import { logger } from '@/utils/logger';
 import { prisma } from '@/lib/prisma';
 import { WalletRepository } from '../wallet/walletRepository';
-
 
 export class CodeRepository {
   private WalletRepository: WalletRepository;
@@ -140,8 +145,10 @@ export class CodeRepository {
     });
   }
 
-  async redeemCode(userId: string, code: Code): Promise<[CodeRedemption, Transaction, Wallet]> {
-
+  async redeemCode(
+    userId: string,
+    code: Code,
+  ): Promise<[CodeRedemption, Transaction, Wallet]> {
     const existingRedemption = await prisma.codeRedemption.findUnique({
       where: {
         user_id_code_id: {
@@ -167,7 +174,7 @@ export class CodeRepository {
         userId,
         code.reward_coin,
         'CODE_REDEMPTION',
-        { codeId: code.id }
+        { codeId: code.id },
       );
 
       return [redemption, transaction, wallet];
@@ -203,5 +210,21 @@ export class CodeRepository {
     callback: (prisma: Prisma.TransactionClient) => Promise<T>,
   ): Promise<T> {
     return await prisma.$transaction(callback);
+  }
+
+  async getSelfCreatedCodes(userId: string): Promise<any | null> {
+    return await prisma.code.findMany({
+      where: {
+        created_by_user_id: userId,
+      },
+      include: {
+        creator: {
+          select: {
+            firstname: true,
+            lastname: true,
+          },
+        },
+      },
+    });
   }
 }
