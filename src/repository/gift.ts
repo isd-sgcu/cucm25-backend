@@ -1,6 +1,6 @@
-import { GIFT_SYSTEM, SYSTEM_DEFAULTS } from "@/constant/systemConfig";
-import { WalletRepository } from "@/repository/wallet";
-import { prisma } from "@/lib/prisma";
+import { GIFT_SYSTEM, SYSTEM_SETTINGS } from '@/constant/systemConfig';
+import { WalletRepository } from '@/repository/wallet';
+import { prisma } from '@/lib/prisma';
 
 export class GiftRepository {
   private walletRepository: WalletRepository;
@@ -11,21 +11,24 @@ export class GiftRepository {
 
   async getHourlyQuota(): Promise<number> {
     const giftHourlyQuota = await prisma.systemSetting.findUnique({
-      where: { setting_key: "gift_hourly_quota" },
+      where: { setting_key: 'gift_hourly_quota' },
     });
 
     return parseInt(
       giftHourlyQuota?.setting_value ||
-        SYSTEM_DEFAULTS.GIFT_QUOTA.toString()
+        SYSTEM_SETTINGS.gift_hourly_quota!.default.toString(),
     );
   }
 
-  async checkRecipientEligibility(senderId: string, recipientId: string): Promise<boolean> {
+  async checkRecipientEligibility(
+    senderId: string,
+    recipientId: string,
+  ): Promise<boolean> {
     const transaction = await prisma.transaction.findFirst({
       where: {
         sender_user_id: senderId,
         recipient_user_id: recipientId,
-        type: "GIFT",
+        type: 'GIFT',
       },
     });
 
@@ -33,7 +36,6 @@ export class GiftRepository {
   }
 
   async sendGift(senderId: string, recipientId: string): Promise<void> {
-
     await prisma.$transaction(async (tx) => {
       const wallet = await tx.wallet.update({
         where: { user_id: senderId },
@@ -49,10 +51,9 @@ export class GiftRepository {
       await this.walletRepository.addCoins(
         recipientId,
         GIFT_SYSTEM.DEFAULT_VALUE,
-        "GIFT",
-        { senderId }
+        'GIFT',
+        { senderId },
       );
     });
   }
-    
 }

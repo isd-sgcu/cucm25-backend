@@ -11,7 +11,7 @@ export default function authRouter() {
   const authController = new AuthController(authUsecase);
 
   router.post('/login', authController.login.bind(authController));
-  router.get('/me', authMiddleware, authController.me.bind(authController));
+  router.get('/me', authMiddleware(true), authController.me.bind(authController));
 
   return router;
 }

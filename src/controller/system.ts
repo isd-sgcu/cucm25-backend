@@ -1,17 +1,16 @@
-import { ISystemUsecase } from '@/usecase/system';
 import { Request, Response } from 'express';
 import { AppError } from '@/types/error/AppError';
 import { logger } from '@/utils/logger';
+import { SystemUsecase } from '@/usecase/system';
+import { AuthenticatedRequest } from '@/types/auth';
 
 export class SystemController {
-  constructor(private systemUsecase: ISystemUsecase) {}
+  constructor(private systemUsecase: SystemUsecase) {}
 
-  async toggleSystem(req: Request, res: Response): Promise<void> {
+  async toggleSystem(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
       // Get user ID from JWT token (set by authMiddleware)
-      const adminUserId = req.user?.id;
-
-      if (!adminUserId) {
+      if (!req.user) {
         res.status(401).json({
           error: 'Authentication required',
         });
@@ -37,7 +36,7 @@ export class SystemController {
 
       const result = await this.systemUsecase.toggleSystemSetting(
         { settingKey, enabled },
-        adminUserId,
+        req.user,
       );
 
       res.status(200).json({
@@ -58,23 +57,20 @@ export class SystemController {
     }
   }
 
-  async setSystemSetting(req: Request, res: Response): Promise<void> {
+  async setSystemSetting(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
-      // Get user ID from JWT token (set by authMiddleware)
-      const adminUserId = req.user?.id;
-
-      if (!adminUserId) {
+      if (!req.user) {
         res.status(401).json({
           error: 'Authentication required',
         });
         return;
       }
-      
+
       const result = await this.systemUsecase.setSystemSetting(
-        adminUserId,
+        req.user,
         req.body,
       );
-      
+
       res.status(200).json({
         success: true,
         data: result,

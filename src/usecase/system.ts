@@ -1,8 +1,6 @@
 import { AppError } from '@/types/error/AppError';
 import {
-  GIFT_SYSTEM,
-  SYSTEM_DEFAULTS,
-  ROLE_MAPPINGS,
+  SETTINGS_TTL,
   SYSTEM_SETTINGS,
 } from '@/constant/systemConfig';
 import {
@@ -13,40 +11,20 @@ import {
   SettingRequest,
 } from '@/types/system';
 import { SystemRepository } from '@/repository/system';
+import { User } from '@prisma/client';
 
-export interface ISystemUsecase {
-  toggleSystemSetting(
-    data: SystemToggleRequest,
-    adminUserId: string,
-  ): Promise<SystemToggleResponse>;
+export class SystemUsecase {
+  private cacheAt = 0;
+  private cachedStatus: SystemStatusResponse | null = null;
+  private buildingStatusPromise: Promise<SystemStatusResponse> | null = null;
 
-  getSystemStatus(): Promise<SystemStatusResponse>;
-
-  checkSystemAvailability(userRole?: string): Promise<boolean>;
-
-  setSystemSetting(
-    adminUserId: string,
-    body: SettingRequest,
-  ): Promise<{
-    success: boolean;
-    message: string;
-    newSettings: any[];
-  }>;
-}
-
-export class SystemUsecase implements ISystemUsecase {
   constructor(private systemRepository: SystemRepository) {}
 
   async toggleSystemSetting(
     data: SystemToggleRequest,
-    adminUserId: string,
+    user: Pick<User, 'id' | 'role'>,
   ): Promise<SystemToggleResponse> {
     // Validate ADMIN-only permission (changed from ADMIN or MODERATOR)
-    const user = await this.systemRepository.getUserWithRole(adminUserId);
-    if (!user) {
-      throw new AppError('User not found', 404);
-    }
-
     const userRole = user.role;
     if (userRole !== 'ADMIN') {
       throw new AppError('Only administrators can modify system settings', 403);
@@ -54,23 +32,18 @@ export class SystemUsecase implements ISystemUsecase {
 
     // Validate setting key using centralized constants
     const validKeys: SettingKey[] = [
-      SYSTEM_SETTINGS.JUNIOR_LOGIN_ENABLED as SettingKey,
-      SYSTEM_SETTINGS.MOD_LOGIN_ENABLED as SettingKey,
-      SYSTEM_SETTINGS.SENIOR_LOGIN_ENABLED as SettingKey,
+      'junior_login_enabled' as SettingKey,
+      'mod_login_enabled' as SettingKey,
+      'senior_login_enabled' as SettingKey,
     ];
 
     if (!validKeys.includes(data.settingKey as SettingKey)) {
       throw new AppError('Invalid setting key', 400);
     }
 
-    let settingValue: string;
-    settingValue = data.enabled
-      ? SYSTEM_DEFAULTS.BOOLEAN_ENABLED
-      : SYSTEM_DEFAULTS.BOOLEAN_DISABLED;
-
     const updatedSetting = await this.systemRepository.updateSystemSetting(
       data.settingKey as SettingKey,
-      settingValue,
+      data.enabled.toString(),
     );
 
     return {
@@ -83,18 +56,13 @@ export class SystemUsecase implements ISystemUsecase {
   }
 
   async setSystemSetting(
-    adminUserId: string,
+    user: Pick<User, 'id' | 'role'>,
     body: SettingRequest,
   ): Promise<{
     success: boolean;
     message: string;
     newSettings: any[];
   }> {
-    const user = await this.systemRepository.getUserWithRole(adminUserId);
-    if (!user) {
-      throw new AppError('User not found', 404);
-    }
-
     const userRole = user.role;
     if (userRole !== 'ADMIN') {
       throw new AppError('Only administrators can modify system settings', 403);
@@ -105,15 +73,18 @@ export class SystemUsecase implements ISystemUsecase {
     }
 
     for (const [key, value] of Object.entries(body)) {
-      if (!(key.toUpperCase() in SYSTEM_SETTINGS)) {
+      if (!(key in SYSTEM_SETTINGS)) {
         throw new AppError(`Invalid setting key: ${key}`, 400);
       }
 
-      await this.systemRepository.updateSystemSetting(key as SettingKey, value.toString());
+      await this.systemRepository.updateSystemSetting(
+        key as SettingKey,
+        value.toString(),
+      );
     }
 
     const updatedSetting = await this.systemRepository.getAllSystemSettings();
-    
+
     return {
       success: true,
       message: `Settings updated successfully`,
@@ -122,64 +93,81 @@ export class SystemUsecase implements ISystemUsecase {
   }
 
   async getSystemStatus(): Promise<SystemStatusResponse> {
+    const now = Date.now();
+    if (this.cachedStatus && now - this.cacheAt < SETTINGS_TTL) {
+      return this.cachedStatus;
+    }
+
+    if (this.buildingStatusPromise) {
+      return this.buildingStatusPromise;
+    }
+
+    this.buildingStatusPromise = this.buildSystemStatus()
+      .then((status) => {
+        this.cachedStatus = status;
+        this.cacheAt = Date.now();
+        return status;
+      })
+      .finally(() => {
+        this.buildingStatusPromise = null;
+      });
+
+    return this.buildingStatusPromise;
+  }
+
+  async buildSystemStatus(): Promise<SystemStatusResponse> {
     const settings = await this.systemRepository.getAllSystemSettings();
 
-    const settingsMap = new Map(
-      settings.map((s) => [s.setting_key, s.setting_value]),
+    const settingsObj = settings.reduce(
+      (obj, setting) => {
+        const config = SYSTEM_SETTINGS[setting.setting_key];
+
+        if (!config) {
+          obj[setting.setting_key] = setting.setting_value;
+          return obj;
+        }
+
+        if (typeof config.default === 'boolean') {
+          obj[config.output] = setting.setting_value === 'true';
+        } else if (typeof config.default === 'number') {
+          obj[config.output] = parseInt(setting.setting_value, 10);
+        } else {
+          obj[config.output] = setting.setting_value;
+        }
+
+        return obj;
+      },
+      {} as { [key: string]: any },
     );
 
     const lastUpdated = settings.reduce((latest, setting) => {
       return setting.updated_at > latest ? setting.updated_at : latest;
     }, new Date(0));
 
+    Object.values(SYSTEM_SETTINGS).forEach((setting) => {
+      if (!(setting.output in settingsObj)) {
+        settingsObj[setting.output] = setting.default;
+      }
+    });
+
     return {
-      juniorLoginEnabled:
-        settingsMap.get(SYSTEM_SETTINGS.JUNIOR_LOGIN_ENABLED) ===
-        SYSTEM_DEFAULTS.BOOLEAN_ENABLED,
-      modLoginEnabled:
-        settingsMap.get(SYSTEM_SETTINGS.MOD_LOGIN_ENABLED) ===
-        SYSTEM_DEFAULTS.BOOLEAN_ENABLED,
-      seniorLoginEnabled:
-        settingsMap.get(SYSTEM_SETTINGS.SENIOR_LOGIN_ENABLED) ===
-        SYSTEM_DEFAULTS.BOOLEAN_ENABLED,
-      giftHourlyQuota: parseInt(
-        settingsMap.get(SYSTEM_SETTINGS.GIFT_HOURLY_QUOTA) ||
-          SYSTEM_DEFAULTS.GIFT_QUOTA,
-      ),
-      ticketPrice: parseInt(
-        settingsMap.get(SYSTEM_SETTINGS.TICKET_PRICE) ||
-          SYSTEM_DEFAULTS.TICKET_PRICE,
-      ),
+      ...settingsObj,
       lastUpdated: lastUpdated.toISOString(),
-    };
+      cacheAt: this.cacheAt,
+    } as SystemStatusResponse;
   }
 
-  async checkSystemAvailability(userRole?: string): Promise<boolean> {
-    // Check role-specific availability using centralized role mappings
-    if (userRole) {
-      let settingKey: SettingKey | undefined;
+  async checkSystemAvailability(userRole: string): Promise<boolean> {
+    const status = await this.getSystemStatus();
 
-      // Map role strings to their corresponding system setting keys
-      switch (userRole) {
-        case ROLE_MAPPINGS.PARTICIPANT:
-          settingKey = SYSTEM_SETTINGS.JUNIOR_LOGIN_ENABLED as SettingKey;
-          break;
-        case ROLE_MAPPINGS.MODERATOR:
-          settingKey = SYSTEM_SETTINGS.MOD_LOGIN_ENABLED as SettingKey;
-          break;
-        case ROLE_MAPPINGS.STAFF:
-        case ROLE_MAPPINGS.ADMIN:
-          // Both STAFF and ADMIN use senior settings (since ADMIN maps to "senior")
-          settingKey = SYSTEM_SETTINGS.SENIOR_LOGIN_ENABLED as SettingKey;
-          break;
-      }
-
-      if (settingKey) {
-        return await this.systemRepository.isSystemEnabled(settingKey);
-      }
+    if (userRole === 'MODERATOR') {
+      return status.modLoginEnabled;
+    } else if (userRole === 'STAFF') {
+      return status.seniorLoginEnabled;
+    } else if (userRole === 'PARTICIPANT') {
+      return status.juniorLoginEnabled;
+    } else {
+      return true;
     }
-
-    // If no role specified or role is not recognized, allow access
-    return true;
   }
 }

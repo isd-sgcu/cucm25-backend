@@ -12,13 +12,13 @@ export default function transactionRouter() {
 
   router.get(
     '/history/coins',
-    authMiddleware,
+    authMiddleware(),
     transactionController.getUserCoinTransactions.bind(transactionController),
   );
 
   router.get(
     '/history/gifts',
-    authMiddleware,
+    authMiddleware(),
     transactionController.getUserGiftTransactions.bind(transactionController),
   );
 

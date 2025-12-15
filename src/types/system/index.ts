@@ -18,6 +18,7 @@ export interface SystemStatusResponse {
   giftHourlyQuota: number;
   ticketPrice: number;
   lastUpdated: string;
+  cacheAt: number;
 }
 
 export interface SystemSetting {

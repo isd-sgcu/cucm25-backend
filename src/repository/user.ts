@@ -3,7 +3,7 @@ import type { OnboardingAnswers, ParsedUser } from '@/types/user';
 import { Prisma, User } from '@prisma/client';
 import type { LeaderboardUser } from '@/types/leaderboard';
 import { LeaderboardFilter } from '@/types/leaderboard/index';
-import { SYSTEM_DEFAULTS } from '@/constant/systemConfig';
+import { SYSTEM_SETTINGS } from '@/constant/systemConfig';
 
 export class UserRepository {
   async create(user: ParsedUser): Promise<void> {
@@ -30,9 +30,7 @@ export class UserRepository {
     });
   }
 
-  async getUser(
-    input: Partial<Pick<User, 'id' | 'username'>>,
-  ): Promise<
+  async getUser(input: Partial<Pick<User, 'id' | 'username'>>): Promise<
     | (User & {
         wallets: {
           coin_balance: number;
@@ -49,7 +47,8 @@ export class UserRepository {
     });
 
     const quota = parseInt(
-      giftHourlyQuota?.setting_value || SYSTEM_DEFAULTS.GIFT_QUOTA.toString(),
+      giftHourlyQuota?.setting_value ||
+        SYSTEM_SETTINGS.gift_hourly_quota!.default.toString(),
     );
 
     let user = await prisma.user.findFirst({
@@ -71,7 +70,6 @@ export class UserRepository {
 
     const startOfCurrentHour = new Date();
     startOfCurrentHour.setMinutes(0, 0, 0);
-    startOfCurrentHour.setHours(startOfCurrentHour.getHours()-1);
 
     if (
       !user.wallets.last_gift_reset ||
@@ -106,7 +104,7 @@ export class UserRepository {
       wallets: {
         coin_balance: user.wallets.coin_balance,
         cumulative_coin: user.wallets.cumulative_coin,
-        gift_sends_remaining: (quota - user.wallets.gift_sends),
+        gift_sends_remaining: quota - user.wallets.gift_sends,
         gift_sends: user.wallets.gift_sends,
         last_gift_reset: user.wallets.last_gift_reset,
       },
@@ -175,7 +173,6 @@ export class UserRepository {
   }
 
   async getParsedUserById(id: string): Promise<ParsedUser | null> {
-
     const user = await this.getUser({ id });
     return user;
   }

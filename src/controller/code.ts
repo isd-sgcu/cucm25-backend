@@ -1,11 +1,11 @@
-import { ICodeUsecase } from '@/usecase/code';
+import { CodeUsecase } from '@/usecase/code';
 import { Request, Response } from 'express';
 import { AppError } from '@/types/error/AppError';
 import { logger } from '@/utils/logger';
 import { TARGET_ROLES } from '@/constant/systemConfig';
 
 export class CodeController {
-  constructor(private codeUsecase: ICodeUsecase) {}
+  constructor(private codeUsecase: CodeUsecase) {}
 
   async generateCode(req: Request, res: Response): Promise<void> {
     try {

@@ -1,9 +1,28 @@
 import { SettingKey } from '@/types/system';
 import { logger } from '@/utils/logger';
 import { prisma } from '@/lib/prisma';
+import { SYSTEM_SETTINGS, COMMIT_DEFAULTS } from '@/constant/systemConfig';
+import { SystemSetting } from '@prisma/client';
 
 export class SystemRepository {
   constructor() {}
+
+  async initializeDefaultSettings(): Promise<void> {
+    await Promise.all(
+      Object.entries(SYSTEM_SETTINGS).map(async ([key, setting]) => {
+        return await prisma.systemSetting.upsert({
+          where: { setting_key: key },
+          update: {},
+          create: {
+            setting_key: key,
+            setting_value: setting.default.toString() || '',
+            description: setting.description || '',
+            updated_at: new Date(),
+          },
+        });
+      }),
+    );
+  }
 
   async getSystemSetting(settingKey: SettingKey): Promise<any | null> {
     return await prisma.systemSetting.findUnique({
@@ -11,10 +30,16 @@ export class SystemRepository {
     });
   }
 
-  async getAllSystemSettings(): Promise<any[]> {
-    return await prisma.systemSetting.findMany({
+  async getAllSystemSettings(): Promise<SystemSetting[]> {
+    const settings = await prisma.systemSetting.findMany({
       orderBy: { setting_key: 'asc' },
     });
+
+    if (COMMIT_DEFAULTS && settings.length === 0) {
+      this.initializeDefaultSettings();
+    }
+
+    return settings;
   }
 
   async updateSystemSetting(
@@ -30,40 +55,12 @@ export class SystemRepository {
       create: {
         setting_key: settingKey,
         setting_value: settingValue,
-        description: this.getDefaultDescription(settingKey),
-        updated_at: new Date(),
+        description:
+          SYSTEM_SETTINGS[
+            settingKey as keyof typeof SYSTEM_SETTINGS
+          ]?.description || '',      
+        updated_at: new Date(),  
       },
     });
-  }
-
-  async isSystemEnabled(settingKey: SettingKey): Promise<boolean> {
-    try {
-      const setting = await this.getSystemSetting(settingKey);
-      return setting?.setting_value === 'true';
-    } catch (error) {
-      logger.error(
-        'SystemRepository',
-        'Error checking if system is enabled',
-        error,
-      );
-      return false;
-    }
-  }
-
-  async getUserWithRole(userId: string): Promise<any | null> {
-    return await prisma.user.findUnique({
-      where: { id: userId },
-    });
-  }
-
-  private getDefaultDescription(settingKey: SettingKey): string {
-    const descriptions: Record<SettingKey, string> = {
-      junior_login_enabled: 'Enable/disable system access for participants',
-      mod_login_enabled: 'Enable/disable system access for moderators',
-      senior_login_enabled: 'Enable/disable system access for staff members',
-      gift_hourly_quota: 'Number of gifts that can be sent per hour',
-      ticket_price: 'Price of a single ticket purchase',
-    };
-    return descriptions[settingKey] || '';
   }
 }

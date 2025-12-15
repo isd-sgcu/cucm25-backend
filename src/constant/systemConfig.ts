@@ -13,24 +13,46 @@ export const GIFT_SYSTEM = {
   DEFAULT_VALUE: 100,
 } as const;
 
-// System Settings Keys
-export const SYSTEM_SETTINGS = {
-  JUNIOR_LOGIN_ENABLED: 'junior_login_enabled',
-  MOD_LOGIN_ENABLED: 'mod_login_enabled',
-  SENIOR_LOGIN_ENABLED: 'senior_login_enabled',
-  GIFT_HOURLY_QUOTA: 'gift_hourly_quota',
-  TICKET_PRICE: 'ticket_price',
-} as const;
+export const COMMIT_DEFAULTS = false;
+export const SETTINGS_TTL = 3000; // 3 seconds
 
-// Default System Values
-export const SYSTEM_DEFAULTS = {
-  BOOLEAN_ENABLED: 'true',
-  BOOLEAN_DISABLED: 'false',
-  JUNIOR_LOGIN_ENABLED: true,
-  MOD_LOGIN_ENABLED: true,
-  SENIOR_LOGIN_ENABLED: true,
-  GIFT_QUOTA: GIFT_SYSTEM.DEFAULT_HOURLY_QUOTA.toString(),
-  TICKET_PRICE: '10',
+export const SYSTEM_SETTINGS: {
+  [key: string]: {
+    output: string;
+    description: string;
+    default?: any;
+  };
+} = {
+  junior_login_enabled: {
+    output: 'juniorLoginEnabled',
+    description: 'Enable or disable login for junior users.',
+    default: true,
+  },
+  mod_login_enabled: {
+    output: 'modLoginEnabled',
+    description: 'Enable or disable login for moderator users.',
+    default: true,
+  },
+  senior_login_enabled: {
+    output: 'seniorLoginEnabled',
+    description: 'Enable or disable login for senior users.',
+    default: true,
+  },
+  gift_hourly_quota: {
+    output: 'giftHourlyQuota',
+    description: 'Number of gifts a user can send per hour.',
+    default: 5,
+  },
+  gift_value: {
+    output: 'giftValue',
+    description: 'Amount of currency awarded to the recipient of a gift.',
+    default: 100,
+  },
+  ticket_price: {
+    output: 'ticketPrice',
+    description: 'Cost of a single ticket in the system.',
+    default: 15,
+  },
 } as const;
 
 // User Role Mappings (Database Enum -> Lowercase String)
