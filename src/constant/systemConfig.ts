@@ -59,16 +59,6 @@ export const SYSTEM_SETTINGS: {
 export const ROLE_MAPPINGS = {
   PARTICIPANT: 'junior',
   STAFF: 'senior',
-  MODERATOR: 'moderator',
-  ADMIN: 'senior',
-} as const;
-
-// Database Role Enum Values
-export const DATABASE_ROLES = {
-  PARTICIPANT: 'PARTICIPANT',
-  STAFF: 'STAFF',
-  MODERATOR: 'MODERATOR',
-  ADMIN: 'ADMIN',
 } as const;
 
 // Target Role Values (for code generation)
@@ -86,12 +76,6 @@ export const BUSINESS_RULES = {
     FORMAT: {
       LETTER_COUNT: 1,
       NUMBER_COUNT: 3,
-      TOTAL_COMBINATIONS: 26000, // 26 * 1000
     },
-  },
-  WALLET: {
-    MIN_BALANCE: 0,
-    DEFAULT_LEVEL: 1,
-    DEFAULT_GIFT_SENDS: GIFT_SYSTEM.DEFAULT_HOURLY_QUOTA,
   },
 } as const;
