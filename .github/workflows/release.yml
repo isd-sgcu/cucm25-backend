@@ -12,7 +12,7 @@ on:
       - main
       - dev
     tags:
-      - 'v*'
+      - v*
   workflow_dispatch:
 
 jobs:
@@ -30,8 +30,8 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: 'lts/*'
-          cache: 'npm'
+          node-version: lts/*
+          cache: npm
 
       - name: Install dependencies
         run: npm install
@@ -57,15 +57,6 @@ jobs:
       RELEASE_VERSION: ${{ steps.semantic-release.outputs.NEXT_RELEASE_VERSION }}
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v6
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: 'lts/*'
-          cache: 'npm'
-
       - name: Get GitHub Token
         id: get-token
         uses: actions/create-github-app-token@v2
@@ -73,10 +64,16 @@ jobs:
           app-id: ${{ vars.ISD_INFRA_APP_ID }}
           private-key: ${{ secrets.ISD_INFRA_PRIVATE_KEY }}
 
-      - name: Debug App token
-        run: |
-          curl -H "Authorization: Bearer ${{ steps.get-token.outputs.token }}" \
-            https://api.github.com/installation/repositories
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          token: ${{ steps.get-token.outputs.token }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: lts/*
+          cache: npm
 
       - name: Install dependencies
         run: npm install
@@ -86,9 +83,9 @@ jobs:
      
       - name: Create Release
         id: semantic-release
-        run: npx semantic-release --repositoryUrl https://x-access-token:$GH_TOKEN@github.com/$GITHUB_REPOSITORY.git
+        run: npx semantic-release
         env:
-          GH_TOKEN: ${{ steps.get-token.outputs.token }}
+          GITHUB_TOKEN: ${{ steps.get-token.outputs.token }}
 
   docker-build:
     name: Build and Push Docker Image
