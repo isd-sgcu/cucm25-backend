@@ -58,8 +58,8 @@ export class AuthUsecase {
   }
 
   parseKeycloakUser(user: KeycloakUser): ParsedUser {
-    let role = this.getRoleType(user.groups);
-    let educationLevel = this.getEducationLevel(role, user.education_level);
+    const role = this.getRoleType(user.groups);
+    const educationLevel = this.getEducationLevel(role, user.education_level);
 
     return {
       id: user.sub,

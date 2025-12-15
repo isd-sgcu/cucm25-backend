@@ -5,8 +5,6 @@ import { ParsedUser } from '@/types/user';
 import { GIFT_SYSTEM } from '@/constant/systemConfig';
 import { AppError } from '@/types/error/AppError';
 import { logger } from '@/utils/logger';
-import { prisma } from '@/lib/prisma';
-import { Recoverable } from 'repl';
 
 type QuestionAnswer = {
   questionId: string;

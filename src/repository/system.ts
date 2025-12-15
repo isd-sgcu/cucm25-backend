@@ -1,5 +1,4 @@
 import { SettingKey } from '@/types/system';
-import { logger } from '@/utils/logger';
 import { prisma } from '@/lib/prisma';
 import { SYSTEM_SETTINGS, COMMIT_DEFAULTS } from '@/constant/systemConfig';
 import { SystemSetting } from '@prisma/client';
@@ -24,12 +23,6 @@ export class SystemRepository {
     );
   }
 
-  async getSystemSetting(settingKey: SettingKey): Promise<any | null> {
-    return await prisma.systemSetting.findUnique({
-      where: { setting_key: settingKey },
-    });
-  }
-
   async getAllSystemSettings(): Promise<SystemSetting[]> {
     const settings = await prisma.systemSetting.findMany({
       orderBy: { setting_key: 'asc' },
@@ -45,7 +38,7 @@ export class SystemRepository {
   async updateSystemSetting(
     settingKey: SettingKey,
     settingValue: string,
-  ): Promise<any> {
+  ): Promise<SystemSetting> {
     return await prisma.systemSetting.upsert({
       where: { setting_key: settingKey },
       update: {

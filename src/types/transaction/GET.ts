@@ -1,13 +1,13 @@
 import type { Request } from 'express';
 import { AuthUser } from '../auth';
 
-export interface GetRequestParams {}
+type GetRequestParams = unknown;
 
-interface ResponseBody {}
+type ResponseBody = unknown;
 
-interface RequestBody {}
+type RequestBody = unknown;
 
-interface RequestQuery {}
+type RequestQuery = unknown;
 
 export interface GetTransactionRequest extends Request<
   GetRequestParams,

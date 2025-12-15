@@ -28,7 +28,7 @@ export class LeaderboardUsecase {
       throw new AppError('Limit query param does not exist', 400);
     }
 
-    let role = query.role?.toLowerCase() || 'all';
+    const role = query.role?.toLowerCase() || 'all';
     let roles = [];
     if (role === 'all') {
       roles = [{ role: RoleType.PARTICIPANT }, { role: RoleType.STAFF }];

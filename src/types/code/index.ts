@@ -33,18 +33,13 @@ export interface RedeemCodeResponse {
 
 export interface CodeWithCreator {
   id: number;
-  codeString: string;
-  targetRole: string;
-  activityName: string;
-  rewardCoin: number;
-  createdByUserId: string;
-  expiresAt: Date;
-  createdAt: Date;
-  creator: {
-    id: string;
-    username: string;
-    email: string;
-  };
+  code_string: string;
+  target_role: string;
+  activity_name: string;
+  reward_coin: number;
+  created_by_user_id: string;
+  expires_at: Date | null;
+  created_at: Date | null;
 }
 
 export interface CodeHistoryResponse {

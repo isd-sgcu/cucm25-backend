@@ -2,6 +2,7 @@ import { TransactionRepository } from '@/repository/transaction';
 import { AuthUser } from '@/types/auth';
 import { AppError } from '@/types/error/AppError';
 import { CoinHistoryRecord, GiftHistoryRecord } from '@/types/transaction';
+import { logger } from '@/utils/logger';
 
 export class TransactionUsecase {
   private transactionRepository: TransactionRepository;
@@ -23,6 +24,11 @@ export class TransactionUsecase {
         data: result,
       };
     } catch (error) {
+      logger.error(
+        'TransactionUsecase',
+        'Error fetching coin transactions:',
+        error,
+      );
       throw new AppError('Unable to get coin transactions', 500);
     }
   }
@@ -40,6 +46,11 @@ export class TransactionUsecase {
         data: result,
       };
     } catch (error) {
+      logger.error(
+        'TransactionUsecase',
+        'Error fetching gift transactions:',
+        error,
+      );
       throw new AppError('Unable to get gift transactions', 500);
     }
   }

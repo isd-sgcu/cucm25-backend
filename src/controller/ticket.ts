@@ -1,6 +1,7 @@
 import { AuthenticatedRequest } from '@/types/auth';
 import { AppError } from '@/types/error/AppError';
 import { TicketUsecase } from '@/usecase/ticket';
+import { logger } from '@/utils/logger';
 import { RoleType } from '@prisma/client';
 import type { Request, Response } from 'express';
 
@@ -16,6 +17,7 @@ export class TicketController {
       const ticketPrice = await this.ticketUsecase.getTicketPrice();
       res.status(200).json({ success: true, data: ticketPrice });
     } catch (error) {
+      logger.error('TicketController', 'getPrice', error);
       throw new AppError('Failed to get ticket price', 500);
     }
   }
@@ -53,6 +55,7 @@ export class TicketController {
         res.status(400).json({ success: false, message: purchase.message });
       }
     } catch (error) {
+      logger.error('TicketController', 'buyTicket', error);
       throw new AppError('Failed to buy ticket', 500);
     }
   }
@@ -104,6 +107,7 @@ export class TicketController {
         });
       }
     } catch (error) {
+      logger.error('TicketController', 'exportPurchaseHistory', error);
       throw new AppError('Failed to export tickets', 500);
     }
   }
@@ -150,6 +154,7 @@ export class TicketController {
       res.setHeader('Content-Type', 'text/csv');
       fileStream.pipe(res);
     } catch (error) {
+      logger.error('TicketController', 'downloadPurchaseHistory', error);
       throw new AppError('Failed to download ticket export', 500);
     }
   }

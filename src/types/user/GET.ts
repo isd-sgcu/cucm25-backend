@@ -5,11 +5,11 @@ export interface GetRequestParams {
   id?: string; // id from frontend (e.g., 'nXXX', 'pXXX') refer to `username` in the database
 }
 
-interface ResponseBody {}
+type ResponseBody = unknown;
 
-interface RequestBody {}
+type RequestBody = unknown;
 
-interface RequestQuery {}
+type RequestQuery = unknown;
 
 export interface GetUserRequest extends Request<
   GetRequestParams,
