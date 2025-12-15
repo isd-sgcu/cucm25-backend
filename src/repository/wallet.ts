@@ -13,7 +13,10 @@ export class WalletRepository {
   async deductCoins(
     userId: string,
     amount: number,
-    transactionType: 'PAYMENT' | 'TICKET_PURCHASE' | 'ADMIN_ADJUSTMENT' = 'PAYMENT',
+    transactionType:
+      | 'PAYMENT'
+      | 'TICKET_PURCHASE'
+      | 'ADMIN_ADJUSTMENT' = 'PAYMENT',
   ) {
     const userWallet = await this.getUserWallet(userId);
     if (!userWallet || userWallet.coin_balance < amount) {
@@ -67,11 +70,17 @@ export class WalletRepository {
           recipient_user_id: userId,
           coin_amount: amount,
           type: transactionType,
-          related_code_id: (transactionType === 'CODE_REDEMPTION' && options?.codeId !== undefined) ? options.codeId : null,
-          sender_user_id: (transactionType === 'GIFT' && options?.senderId) ? options.senderId : userId,
+          related_code_id:
+            transactionType === 'CODE_REDEMPTION' &&
+            options?.codeId !== undefined
+              ? options.codeId
+              : null,
+          sender_user_id:
+            transactionType === 'GIFT' && options?.senderId
+              ? options.senderId
+              : userId,
         },
       }),
-    ]
-    );
+    ]);
   }
 }

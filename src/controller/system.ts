@@ -34,10 +34,10 @@ export class SystemController {
         return;
       }
 
-      const result = await this.systemUsecase.toggleSystemSetting(
-        req.user,
-        { settingKey, enabled },
-      );
+      const result = await this.systemUsecase.toggleSystemSetting(req.user, {
+        settingKey,
+        enabled,
+      });
 
       res.status(200).json({
         success: true,

@@ -1,9 +1,4 @@
-import {
-  CodeRedemption,
-  Transaction,
-  Wallet,
-  Code,
-} from '@prisma/client';
+import { CodeRedemption, Transaction, Wallet, Code } from '@prisma/client';
 import { AppError } from '@/types/error/AppError';
 import { prisma } from '@/lib/prisma';
 import { WalletRepository } from '@/repository/wallet';

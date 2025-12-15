@@ -36,9 +36,9 @@ export type SettingKey =
   | 'ticket_price';
 
 export interface SettingRequest {
-  'junior_login_enabled'?: boolean;
-  'mod_login_enabled'?: boolean;
-  'senior_login_enabled'?: boolean;
-  'gift_hourly_quota'?: number;
-  'ticket_price'?: number;
+  junior_login_enabled?: boolean;
+  mod_login_enabled?: boolean;
+  senior_login_enabled?: boolean;
+  gift_hourly_quota?: number;
+  ticket_price?: number;
 }

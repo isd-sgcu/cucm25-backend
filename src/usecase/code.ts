@@ -28,10 +28,7 @@ export class CodeUsecase {
     const codeString = await this.generateUniqueCodeString();
 
     const creatorRole = user.role;
-    if (
-      creatorRole !== 'MODERATOR' &&
-      creatorRole !== 'ADMIN'
-    ) {
+    if (creatorRole !== 'MODERATOR' && creatorRole !== 'ADMIN') {
       throw new AppError('Only moderators and admins can generate codes', 403);
     }
 
@@ -120,12 +117,8 @@ export class CodeUsecase {
   }
 
   async getCodeHistory(user: AuthUser): Promise<CodeHistoryResponse> {
-
     const userRole = user.role;
-    if (
-      userRole !== 'MODERATOR' &&
-      userRole !== 'ADMIN'
-    ) {
+    if (userRole !== 'MODERATOR' && userRole !== 'ADMIN') {
       throw new AppError(
         'Only moderators and admins can view generated codes',
         403,
@@ -133,8 +126,8 @@ export class CodeUsecase {
     }
 
     const data = await this.codeRepository.getSelfCreatedCodes(user.id);
-    
-    return {data};
+
+    return { data };
   }
 
   private async generateUniqueCodeString(): Promise<string> {

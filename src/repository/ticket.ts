@@ -16,7 +16,8 @@ export class TicketRepository {
     });
     return {
       price: parseInt(
-        ticket_price?.setting_value || SYSTEM_SETTINGS.ticket_price!.default.toString(),
+        ticket_price?.setting_value ||
+          SYSTEM_SETTINGS.ticket_price!.default.toString(),
       ),
       lastUpdated: ticket_price?.updated_at || null,
     };
@@ -32,7 +33,11 @@ export class TicketRepository {
 
     const time = new Date();
 
-    await this.walletRepository.deductCoins(userId, totalCost, 'TICKET_PURCHASE');
+    await this.walletRepository.deductCoins(
+      userId,
+      totalCost,
+      'TICKET_PURCHASE',
+    );
 
     await prisma.ticketPurchase.create({
       data: {

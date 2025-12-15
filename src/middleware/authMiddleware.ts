@@ -13,7 +13,10 @@ declare module 'express' {
 const systemRepository = new SystemRepository();
 const systemUsecase = new SystemUsecase(systemRepository);
 
-export function authMiddleware(skipCheck?: boolean, options?: { allowedRoles?: string[] }) {
+export function authMiddleware(
+  skipCheck?: boolean,
+  options?: { allowedRoles?: string[] },
+) {
   return async (
     req: Request,
     res: Response,
@@ -37,7 +40,9 @@ export function authMiddleware(skipCheck?: boolean, options?: { allowedRoles?: s
       req.user = decoded;
 
       if (!skipCheck) {
-        const isAvailable = await systemUsecase.checkSystemAvailability(decoded.role);
+        const isAvailable = await systemUsecase.checkSystemAvailability(
+          decoded.role,
+        );
 
         if (!isAvailable) {
           res.status(503).json({
@@ -48,11 +53,14 @@ export function authMiddleware(skipCheck?: boolean, options?: { allowedRoles?: s
         }
       }
 
-      if (options?.allowedRoles?.length && !options.allowedRoles.includes(decoded.role)) {
+      if (
+        options?.allowedRoles?.length &&
+        !options.allowedRoles.includes(decoded.role)
+      ) {
         res.status(403).json({ message: 'Forbidden: Role not allowed' });
         return;
       }
-      
+
       next();
     } catch (error) {
       console.log('JWT verification error:', error);
