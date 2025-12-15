@@ -14,21 +14,21 @@ export default function codeRouter() {
   // POST /api/code/generate - requires authentication
   router.post(
     '/generate',
-    authMiddleware,
+    authMiddleware(),
     codeController.generateCode.bind(codeController),
   );
 
   // POST /api/code/redeem - requires authentication
   router.post(
     '/redeem',
-    authMiddleware,
+    authMiddleware(),
     codeController.redeemCode.bind(codeController),
   );
 
   // GET /api/code/history - requires authentication
   router.get(
     '/history',
-    authMiddleware,
+    authMiddleware(),
     codeController.getCodeHistory.bind(codeController),
   );
 

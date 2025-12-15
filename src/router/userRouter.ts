@@ -14,21 +14,21 @@ export default function userRouter() {
 
   router.post(
     '/onboarding',
-    authMiddleware,
+    authMiddleware(),
     userController.onboarding.bind(userController),
   );
   router.post(
     '/reset',
-    authMiddleware,
+    authMiddleware(),
     userController.reset.bind(userController),
   );
-  router.get('/:id', authMiddleware, userController.get.bind(userController));
+  router.get('/:id', authMiddleware(), userController.get.bind(userController));
 
-  router.post('/pay', authMiddleware, userController.pay.bind(userController));
+  router.post('/pay', authMiddleware(), userController.pay.bind(userController));
 
   router.patch(
     '/adjust-coins',
-    authMiddleware,
+    authMiddleware(),
     userController.adjustCoins.bind(userController),
   );
 

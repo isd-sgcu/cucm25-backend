@@ -16,19 +16,19 @@ export default function ticketRouter() {
 
   router.post(
     '/buy',
-    authMiddleware,
+    authMiddleware(),
     ticketController.buyTicket.bind(ticketController),
   );
 
   router.get(
     '/export',
-    authMiddleware,
+    authMiddleware(),
     ticketController.exportPurchaseHistory.bind(ticketController),
   );
 
   router.get(
     '/export/download',
-    authMiddleware,
+    authMiddleware(),
     ticketController.downloadPurchaseHistory.bind(ticketController),
   );
 

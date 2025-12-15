@@ -12,7 +12,7 @@ export default function leaderboardRouter() {
 
   router.get(
     '/',
-    authMiddleware,
+    authMiddleware(),
     leaderboardController.get.bind(leaderboardController),
   );
 

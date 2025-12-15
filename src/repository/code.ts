@@ -26,7 +26,6 @@ export class CodeRepository {
     while (attempts < MAX_RETRIES) {
       attempts++;
 
-      // Cryptographically secure random generation
       // Generate 1 uppercase letter (A-Z) = 26 combinations
       const letterIndex = randomInt(0, 26);
       const letter = String.fromCharCode(65 + letterIndex);

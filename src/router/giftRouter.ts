@@ -12,7 +12,7 @@ export default function giftRouter() {
 
   router.post(
     '/send',
-    authMiddleware,
+    authMiddleware(),
     giftController.sendGift.bind(giftController),
   );
 

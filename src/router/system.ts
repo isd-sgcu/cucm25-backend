@@ -13,7 +13,7 @@ export default function systemRouter() {
   // POST /api/system/toggle - Toggle system settings (Admin only)
   router.post(
     '/toggle',
-    authMiddleware,
+    authMiddleware(),
     systemController.toggleSystem.bind(systemController),
   );
 
@@ -25,7 +25,7 @@ export default function systemRouter() {
 
   router.patch(
     '/set',
-    authMiddleware,
+    authMiddleware(),
     systemController.setSystemSetting.bind(systemController),
   )
 

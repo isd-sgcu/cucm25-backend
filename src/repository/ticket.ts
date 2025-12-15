@@ -1,4 +1,4 @@
-import { SYSTEM_DEFAULTS } from '@/constant/systemConfig';
+import { SYSTEM_SETTINGS } from '@/constant/systemConfig';
 import { prisma } from '@/lib/prisma';
 import { WalletRepository } from '@/repository/wallet';
 import { TicketPurchase } from '@prisma/client';
@@ -16,7 +16,7 @@ export class TicketRepository {
     });
     return {
       price: parseInt(
-        ticket_price?.setting_value || SYSTEM_DEFAULTS.TICKET_PRICE,
+        ticket_price?.setting_value || SYSTEM_SETTINGS.ticket_price!.default.toString(),
       ),
       lastUpdated: ticket_price?.updated_at || null,
     };

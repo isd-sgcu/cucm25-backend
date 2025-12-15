@@ -12,16 +12,7 @@ import {
   RedeemCodeResponse,
 } from '@/types/code';
 
-export interface ICodeUsecase {
-  generateCode(
-    data: GenerateCodeRequest,
-    creatorUserId: string,
-  ): Promise<GenerateCodeResponse>;
-  redeemCode(codeString: string, userId: string): Promise<RedeemCodeResponse>;
-  getCodeHistory(userId: string): Promise<CodeHistoryResponse>;
-}
-
-export class CodeUsecase implements ICodeUsecase {
+export class CodeUsecase {
   constructor(private codeRepository: CodeRepository) {}
 
   async generateCode(
