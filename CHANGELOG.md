@@ -1,3 +1,19 @@
+# [1.0.0-dev.2](https://github.com/isd-sgcu/cucm25-backend/compare/v1.0.0-dev.1...v1.0.0-dev.2) (2025-12-15)
+
+
+### Bug Fixes
+
+* **release:** tets release ([0b609db](https://github.com/isd-sgcu/cucm25-backend/commit/0b609db565100de2f804440182b2ccf41a47b24c))
+* **release:** tets release ([afb0ba8](https://github.com/isd-sgcu/cucm25-backend/commit/afb0ba829975d6022579f71ebbc8454fab5144fa))
+* **release:** tets release ([f6404a5](https://github.com/isd-sgcu/cucm25-backend/commit/f6404a53be97c869a7971c60df9ac7420150a54a))
+* **release:** tets release ([67b5792](https://github.com/isd-sgcu/cucm25-backend/commit/67b579209c089d7772022494daa4396a428abc91))
+
+
+### Features
+
+* **release:** trigger release ([349ed29](https://github.com/isd-sgcu/cucm25-backend/commit/349ed29f1cb0c7ba5607ae7a2e3b9a3e1cd59005))
+* **release:** trigger release ([a1fcc7d](https://github.com/isd-sgcu/cucm25-backend/commit/a1fcc7da1cd4bdba59e197af65e7bee3fc5e5384))
+
 # 1.0.0-dev.1 (2025-12-15)
 
 
