@@ -1,8 +1,5 @@
 import { AppError } from '@/types/error/AppError';
-import {
-  SETTINGS_TTL,
-  SYSTEM_SETTINGS,
-} from '@/constant/systemConfig';
+import { SETTINGS_TTL, SYSTEM_SETTINGS } from '@/constant/systemConfig';
 import {
   SystemToggleRequest,
   SystemToggleResponse,
@@ -21,8 +18,8 @@ export class SystemUsecase {
   constructor(private systemRepository: SystemRepository) {}
 
   async toggleSystemSetting(
-    data: SystemToggleRequest,
     user: Pick<User, 'id' | 'role'>,
+    data: SystemToggleRequest,
   ): Promise<SystemToggleResponse> {
     // Validate ADMIN-only permission (changed from ADMIN or MODERATOR)
     const userRole = user.role;
@@ -83,12 +80,12 @@ export class SystemUsecase {
       );
     }
 
-    const updatedSetting = await this.systemRepository.getAllSystemSettings();
+    const newSettings = await this.systemRepository.getAllSystemSettings();
 
     return {
       success: true,
       message: `Settings updated successfully`,
-      newSettings: updatedSetting,
+      newSettings,
     };
   }
 

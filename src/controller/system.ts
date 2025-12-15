@@ -35,8 +35,8 @@ export class SystemController {
       }
 
       const result = await this.systemUsecase.toggleSystemSetting(
-        { settingKey, enabled },
         req.user,
+        { settingKey, enabled },
       );
 
       res.status(200).json({
@@ -57,7 +57,10 @@ export class SystemController {
     }
   }
 
-  async setSystemSetting(req: AuthenticatedRequest, res: Response): Promise<void> {
+  async setSystemSetting(
+    req: AuthenticatedRequest,
+    res: Response,
+  ): Promise<void> {
     try {
       if (!req.user) {
         res.status(401).json({
