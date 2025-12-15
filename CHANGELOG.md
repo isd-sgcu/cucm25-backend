@@ -1,3 +1,10 @@
+# [1.0.0-dev.3](https://github.com/isd-sgcu/cucm25-backend/compare/v1.0.0-dev.2...v1.0.0-dev.3) (2025-12-15)
+
+
+### Bug Fixes
+
+* **release:** release pipeline ([d2dd2e7](https://github.com/isd-sgcu/cucm25-backend/commit/d2dd2e76113a6bb40074b05991a97075c7d64f1f))
+
 # [1.0.0-dev.2](https://github.com/isd-sgcu/cucm25-backend/compare/v1.0.0-dev.1...v1.0.0-dev.2) (2025-12-15)
 
 
