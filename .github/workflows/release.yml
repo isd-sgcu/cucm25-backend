@@ -81,7 +81,7 @@ jobs:
 
       - name: Create Release
         id: semantic-release
-        run: npx semantic-release --repositoryUrl https://x-access-token:$GITHUB_TOKEN@github.com/$GITHUB_REPOSITORY.git
+        run: npx semantic-release --repositoryUrl https://x-access-token:$GH_TOKEN@github.com/$GITHUB_REPOSITORY.git
         env:
           GH_TOKEN: ${{ steps.get-token.outputs.token }}
 
