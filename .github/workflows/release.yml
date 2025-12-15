@@ -83,7 +83,7 @@ jobs:
         id: semantic-release
         run: npx semantic-release --repositoryUrl https://x-access-token:$GITHUB_TOKEN@github.com/$GITHUB_REPOSITORY.git
         env:
-          GITHUB_TOKEN: ${{ steps.get-token.outputs.token }}
+          GH_TOKEN: ${{ steps.get-token.outputs.token }}
 
   docker-build:
     name: Build and Push Docker Image
