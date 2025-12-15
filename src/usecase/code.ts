@@ -1,9 +1,9 @@
 import { CodeRepository } from '@/repository/code';
 import { AppError } from '@/types/error/AppError';
 import {
-  ROLE_MAPPINGS,
-  DATABASE_ROLES,
   TARGET_ROLES,
+  BUSINESS_RULES,
+  ROLE_MAPPINGS,
 } from '@/constant/systemConfig';
 import {
   CodeHistoryResponse,
@@ -11,32 +11,33 @@ import {
   GenerateCodeResponse,
   RedeemCodeResponse,
 } from '@/types/code';
+import { randomInt } from 'crypto';
+import { logger } from '@/utils/logger';
+import { User } from '@prisma/client';
+import { AuthUser } from '@/types/auth';
+
+const GENERATION_RULES = BUSINESS_RULES.CODE_GENERATION;
 
 export class CodeUsecase {
   constructor(private codeRepository: CodeRepository) {}
 
   async generateCode(
     data: GenerateCodeRequest,
-    creatorUserId: string,
+    user: AuthUser,
   ): Promise<GenerateCodeResponse> {
     // Generate unique code string automatically
-    const codeString = await this.codeRepository.generateUniqueCodeString();
+    const codeString = await this.generateUniqueCodeString();
 
-    const creator = await this.codeRepository.getUserWithRole(creatorUserId);
-    if (!creator) {
-      throw new AppError('User not found', 404);
-    }
-
-    const creatorRole = creator.role;
+    const creatorRole = user.role;
     if (
-      creatorRole !== DATABASE_ROLES.MODERATOR &&
-      creatorRole !== DATABASE_ROLES.ADMIN
+      creatorRole !== 'MODERATOR' &&
+      creatorRole !== 'ADMIN'
     ) {
       throw new AppError('Only moderators and admins can generate codes', 403);
     }
 
     if (
-      creatorRole === DATABASE_ROLES.MODERATOR &&
+      creatorRole === 'MODERATOR' &&
       data.targetRole !== TARGET_ROLES.JUNIOR
     ) {
       throw new AppError('Moderators can only create junior-only codes', 403);
@@ -60,7 +61,7 @@ export class CodeUsecase {
       targetRole: data.targetRole,
       activityName: data.activityName,
       rewardCoin: data.rewardCoin,
-      createdByUserId: creatorUserId,
+      createdByUserId: user.id,
       expiresAt: expiresAt,
     });
 
@@ -86,7 +87,7 @@ export class CodeUsecase {
 
   async redeemCode(
     codeString: string,
-    userId: string,
+    user: AuthUser,
   ): Promise<RedeemCodeResponse> {
     const code = await this.codeRepository.findCodeByString(codeString);
     if (!code) {
@@ -97,27 +98,17 @@ export class CodeUsecase {
       throw new AppError('Code has expired', 400);
     }
 
-    const user = await this.codeRepository.getUserWithRole(userId);
-    if (!user) {
-      throw new AppError('User not found', 404);
-    }
-
     const userRole = user.role;
-
-    // Map RoleType enum to target role strings using shared config
-    const mappedUserRole =
-      ROLE_MAPPINGS[userRole as keyof typeof ROLE_MAPPINGS] ||
-      ROLE_MAPPINGS.PARTICIPANT;
 
     if (
       code.target_role !== TARGET_ROLES.ALL &&
-      code.target_role !== mappedUserRole
+      code.target_role !== ROLE_MAPPINGS[userRole as keyof typeof ROLE_MAPPINGS]
     ) {
       throw new AppError(`This code is only for ${code.target_role} role`, 403);
     }
 
     const [redemption, transaction, wallet] =
-      await this.codeRepository.redeemCode(userId, code);
+      await this.codeRepository.redeemCode(user.id, code);
 
     return {
       success: true,
@@ -129,16 +120,12 @@ export class CodeUsecase {
     };
   }
 
-  async getCodeHistory(userId: string): Promise<CodeHistoryResponse> {
-    const user = await this.codeRepository.getUserWithRole(userId);
-    if (!user) {
-      throw new AppError('User not found', 404);
-    }
+  async getCodeHistory(user: AuthUser): Promise<CodeHistoryResponse> {
 
     const userRole = user.role;
     if (
-      userRole !== DATABASE_ROLES.MODERATOR &&
-      userRole !== DATABASE_ROLES.ADMIN
+      userRole !== 'MODERATOR' &&
+      userRole !== 'ADMIN'
     ) {
       throw new AppError(
         'Only moderators and admins can view generated codes',
@@ -146,8 +133,81 @@ export class CodeUsecase {
       );
     }
 
-    const data = await this.codeRepository.getSelfCreatedCodes(userId);
+    const data = await this.codeRepository.getSelfCreatedCodes(user.id);
 
     return data;
+  }
+
+  private async generateUniqueCodeString(): Promise<string> {
+    const MAX_RETRIES = GENERATION_RULES.MAX_RETRIES;
+    let attempts = 0;
+
+    while (attempts < MAX_RETRIES) {
+      attempts++;
+
+      // Generate 1 uppercase letter (A-Z) = 26 combinations
+      let letter = '';
+      for (let i = 0; i < GENERATION_RULES.FORMAT.LETTER_COUNT; i++) {
+        const letterIndex = randomInt(0, 26);
+        letter += String.fromCharCode(65 + letterIndex);
+      }
+
+      // Generate 3 digits (000-999) = 1,000 combinations
+      const numbers = randomInt(0, 1000)
+        .toString()
+        .padStart(GENERATION_RULES.FORMAT.NUMBER_COUNT, '0');
+
+      // Total combinations = 26 × 1,000 = 26,000 possible codes
+      const codeString = letter + numbers;
+
+      // Check if code already exists
+      const existingCode =
+        await this.codeRepository.findCodeByString(codeString);
+      if (!existingCode) {
+        return codeString;
+      }
+
+      // Log warning เมื่อเริ่มมี collision บ่อย
+      if (attempts > GENERATION_RULES.WARNING_THRESHOLD) {
+        logger.warn('CodeRepository', 'Code generation collision detected', {
+          attempt: attempts,
+          maxRetries: MAX_RETRIES,
+          codeFormat: `${letter}${numbers}`,
+        });
+      }
+    }
+
+    // If all attempts failed, use timestamp-based fallback for guaranteed uniqueness
+    // const timestamp = Date.now().toString().slice(-3) // Last 3 digits of timestamp
+    // const fallbackCode = `X${timestamp}` // X + 3 digit timestamp
+
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let fallbackCode = '';
+    for (let i = 0; i < 4; i++) {
+      const idx = randomInt(0, chars.length);
+      fallbackCode += chars.charAt(idx);
+    }
+
+    logger.warn(
+      'CodeRepository',
+      'Code generation reached max retries, using fallback',
+      {
+        maxRetries: MAX_RETRIES,
+        fallbackCode,
+      },
+    );
+
+    // Check if fallback code already exists (very unlikely)
+    const existingFallback =
+      await this.codeRepository.findCodeByString(fallbackCode);
+    if (!existingFallback) {
+      return fallbackCode;
+    }
+
+    // If even fallback code exists, throw error
+    throw new AppError(
+      'Unable to generate unique code after maximum retries. Please try again or contact support.',
+      500,
+    );
   }
 }

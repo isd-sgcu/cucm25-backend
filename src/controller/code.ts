@@ -3,16 +3,15 @@ import { Request, Response } from 'express';
 import { AppError } from '@/types/error/AppError';
 import { logger } from '@/utils/logger';
 import { TARGET_ROLES } from '@/constant/systemConfig';
+import { AuthenticatedRequest } from '@/types/auth';
 
 export class CodeController {
   constructor(private codeUsecase: CodeUsecase) {}
 
-  async generateCode(req: Request, res: Response): Promise<void> {
+  async generateCode(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
       // Get user ID from JWT token (set by authMiddleware)
-      const creatorUserId = req.user?.id;
-
-      if (!creatorUserId) {
+      if (!req.user) {
         res.status(401).json({
           error: 'Authentication required',
         });
@@ -50,7 +49,7 @@ export class CodeController {
           rewardCoin: Number(rewardCoin),
           expiresAt,
         },
-        creatorUserId,
+        req.user,
       );
 
       res.status(201).json({
@@ -71,12 +70,12 @@ export class CodeController {
     }
   }
 
-  async redeemCode(req: Request, res: Response): Promise<void> {
+  async redeemCode(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
       // Get user ID from JWT token (set by authMiddleware)
-      const userId = req.user?.id;
+      const user = req.user;
 
-      if (!userId) {
+      if (!user) {
         res.status(401).json({
           error: 'Authentication required',
         });
@@ -92,7 +91,7 @@ export class CodeController {
         return;
       }
 
-      const result = await this.codeUsecase.redeemCode(codeString, userId);
+      const result = await this.codeUsecase.redeemCode(codeString, user);
 
       res.status(200).json({
         success: true,
@@ -112,19 +111,19 @@ export class CodeController {
     }
   }
 
-  async getCodeHistory(req: Request, res: Response): Promise<void> {
+  async getCodeHistory(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
       // Get user ID from JWT token (set by authMiddleware)
-      const userId = req.user?.id;
+      const user = req.user;
 
-      if (!userId) {
+      if (!user) {
         res.status(401).json({
           error: 'Authentication required',
         });
         return;
       }
 
-      const result = await this.codeUsecase.getCodeHistory(userId);
+      const result = await this.codeUsecase.getCodeHistory(user);
 
       res.status(200).json({
         success: true,
