@@ -62,8 +62,16 @@ export class GiftUsecase {
     const senderUsername = (senderData as ParsedUser).username;
     const recipientUsername = (recipientData as ParsedUser).username;
 
-    if (await this.giftRepository.checkRecipientEligibility(senderId, recipientId) === false) {
-      throw new AppError('You have already sent a gift to this recipient before.', 400);
+    if (
+      (await this.giftRepository.checkRecipientEligibility(
+        senderId,
+        recipientId,
+      )) === false
+    ) {
+      throw new AppError(
+        'You have already sent a gift to this recipient before.',
+        400,
+      );
     }
 
     await this.giftRepository.sendGift(senderId, recipientId);
@@ -135,7 +143,7 @@ export class GiftUsecase {
         'Recipient has not answered enough icebreaking questions',
         400,
       );
-    } 
+    }
 
     // shouldn't go in
     if (answer.username.toLowerCase() !== recipientData.username) {

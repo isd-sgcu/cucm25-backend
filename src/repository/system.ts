@@ -49,10 +49,9 @@ export class SystemRepository {
         setting_key: settingKey,
         setting_value: settingValue,
         description:
-          SYSTEM_SETTINGS[
-            settingKey as keyof typeof SYSTEM_SETTINGS
-          ]?.description || '',      
-        updated_at: new Date(),  
+          SYSTEM_SETTINGS[settingKey as keyof typeof SYSTEM_SETTINGS]
+            ?.description || '',
+        updated_at: new Date(),
       },
     });
   }

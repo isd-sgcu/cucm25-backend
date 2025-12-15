@@ -27,7 +27,7 @@ export default function systemRouter() {
     '/set',
     authMiddleware(),
     systemController.setSystemSetting.bind(systemController),
-  )
+  );
 
   return router;
 }

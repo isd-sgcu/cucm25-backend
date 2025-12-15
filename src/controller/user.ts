@@ -97,7 +97,9 @@ export class UserController {
     try {
       const { amount, action, username } = req.body;
       await this.userUsecase.adjustCoins(req.user, username, amount, action);
-      res.status(200).json({ success: true, message: 'Wallet adjusted successfully' });
+      res
+        .status(200)
+        .json({ success: true, message: 'Wallet adjusted successfully' });
     } catch (error) {
       if (error instanceof AppError) {
         res.status(error.statusCode).json({

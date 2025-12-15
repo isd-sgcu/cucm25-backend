@@ -111,7 +111,10 @@ export class CodeController {
     }
   }
 
-  async getCodeHistory(req: AuthenticatedRequest, res: Response): Promise<void> {
+  async getCodeHistory(
+    req: AuthenticatedRequest,
+    res: Response,
+  ): Promise<void> {
     try {
       // Get user ID from JWT token (set by authMiddleware)
       const user = req.user;

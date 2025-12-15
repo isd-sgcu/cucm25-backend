@@ -24,7 +24,11 @@ export default function userRouter() {
   );
   router.get('/:id', authMiddleware(), userController.get.bind(userController));
 
-  router.post('/pay', authMiddleware(), userController.pay.bind(userController));
+  router.post(
+    '/pay',
+    authMiddleware(),
+    userController.pay.bind(userController),
+  );
 
   router.patch(
     '/adjust-coins',
