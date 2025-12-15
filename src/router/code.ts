@@ -3,7 +3,6 @@ import { CodeRepository } from '@/repository/code';
 import { CodeUsecase } from '@/usecase/code';
 import { authMiddleware } from '@/middleware/authMiddleware';
 import { Router } from 'express';
-import { prisma } from '@/lib/prisma';
 
 export default function codeRouter() {
   const router = Router();

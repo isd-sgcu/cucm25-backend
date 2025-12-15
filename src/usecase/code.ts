@@ -13,7 +13,6 @@ import {
 } from '@/types/code';
 import { randomInt } from 'crypto';
 import { logger } from '@/utils/logger';
-import { User } from '@prisma/client';
 import { AuthUser } from '@/types/auth';
 
 const GENERATION_RULES = BUSINESS_RULES.CODE_GENERATION;
@@ -134,8 +133,8 @@ export class CodeUsecase {
     }
 
     const data = await this.codeRepository.getSelfCreatedCodes(user.id);
-
-    return data;
+    
+    return {data};
   }
 
   private async generateUniqueCodeString(): Promise<string> {

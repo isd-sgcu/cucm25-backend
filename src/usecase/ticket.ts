@@ -68,7 +68,7 @@ export class TicketUsecase {
   async getTicketPurchases(
     query: { start_time: string; end_time: string } | { event_name: string },
     randomize: boolean = false,
-  ): Promise<{ success: boolean; data?: any }> {
+  ): Promise<{ success: boolean; data?: TicketPurchase[] | string }> {
     try {
       const { start_time, end_time, event_name } = query as any;
 
@@ -98,7 +98,7 @@ export class TicketUsecase {
     }
 
     const parser = new Parser();
-    const csvData = parser.parse(data);
+    const csvData = parser.parse(data as object[]);
 
     return Readable.from([csvData]);
   }

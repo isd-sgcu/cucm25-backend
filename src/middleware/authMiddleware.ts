@@ -3,7 +3,6 @@ import { NextFunction, Request, Response } from 'express';
 import type { AuthUser } from '@/types/auth';
 import { SystemRepository } from '@/repository/system';
 import { SystemUsecase } from '@/usecase/system';
-import { logger } from '@/utils/logger';
 
 declare module 'express' {
   interface Request {
@@ -36,7 +35,6 @@ export function authMiddleware(skipCheck?: boolean, options?: { allowedRoles?: s
     try {
       const decoded = verifyJwt(token);
       req.user = decoded;
-      console.log('Decoded JWT user:', decoded);
 
       if (!skipCheck) {
         const isAvailable = await systemUsecase.checkSystemAvailability(decoded.role);

@@ -1,5 +1,5 @@
 import { CodeUsecase } from '@/usecase/code';
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import { AppError } from '@/types/error/AppError';
 import { logger } from '@/utils/logger';
 import { TARGET_ROLES } from '@/constant/systemConfig';
@@ -21,7 +21,7 @@ export class CodeController {
       const { targetRole, activityName, rewardCoin, expiresAt } = req.body;
 
       // Validation
-      let missingFields = [];
+      const missingFields: string[] = [];
       if (!targetRole) missingFields.push('targetRole');
       if (!activityName) missingFields.push('activityName');
       if (rewardCoin === undefined) missingFields.push('rewardCoin');

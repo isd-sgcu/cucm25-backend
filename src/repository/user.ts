@@ -211,7 +211,7 @@ export class UserRepository {
   async getLeaderboard(
     filter: LeaderboardFilter,
   ): Promise<Array<LeaderboardUser>> {
-    let leaderboard = await prisma.user.findMany({
+    const leaderboard = await prisma.user.findMany({
       where: {
         OR: filter.roles,
       },

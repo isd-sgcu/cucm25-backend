@@ -1,5 +1,4 @@
 import {
-  Prisma,
   CodeRedemption,
   Transaction,
   Wallet,
@@ -23,8 +22,8 @@ export class CodeRepository {
     rewardCoin: number;
     createdByUserId: string;
     expiresAt: Date;
-  }): Promise<any> {
-    const createData: any = {
+  }): Promise<Code> {
+    const createData = {
       code_string: data.codeString,
       target_role: data.targetRole,
       activity_name: data.activityName,
@@ -38,7 +37,7 @@ export class CodeRepository {
     });
   }
 
-  async findCodeByString(codeString: string): Promise<any | null> {
+  async findCodeByString(codeString: string): Promise<Code | null> {
     return await prisma.code.findUnique({
       where: { code_string: codeString },
     });
@@ -80,20 +79,7 @@ export class CodeRepository {
     });
   }
 
-  async updateWalletBalance(
-    userId: string,
-    newBalance: number,
-  ): Promise<any | null> {
-    return await prisma.wallet.update({
-      where: { user_id: userId },
-      data: {
-        coin_balance: newBalance,
-        updated_at: new Date(),
-      },
-    });
-  }
-
-  async getSelfCreatedCodes(userId: string): Promise<any | null> {
+  async getSelfCreatedCodes(userId: string): Promise<Code[]> {
     return await prisma.code.findMany({
       where: {
         created_by_user_id: userId,

@@ -1,12 +1,11 @@
 import type { Request } from 'express';
 import { AuthUser } from '../auth';
 
-interface RequestParams {}
+type RequestParams = unknown;
 
-interface ResponseBody {}
+type ResponseBody = unknown;
 
-interface RequestBody {}
-
+type RequestBody = unknown;
 export interface GetLeaderboardRequestQuery {
   role?: string;
   limit?: string;
