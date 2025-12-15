@@ -150,7 +150,6 @@ export class SystemUsecase {
     return {
       ...settingsObj,
       lastUpdated: lastUpdated.toISOString(),
-      cacheAt: this.cacheAt,
     } as SystemStatusResponse;
   }
 
