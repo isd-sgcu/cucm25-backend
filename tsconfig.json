@@ -4,13 +4,12 @@
   "compilerOptions": {
     // File Layout
     "rootDir": "src",
-    // "outDir": "./dist",
-
+    "outDir": "build",
     // Environment Settings
     // See also https://aka.ms/tsconfig/module
     "target": "es2020",
     "module": "commonjs",
-    "types": ["node", "jest"],
+    // "types": ["node", "jest", "jsonwebtoken"],
     // For nodejs:
     // "lib": ["esnext"],
     // "types": ["node"],
@@ -24,13 +23,15 @@
     // Paths
     "paths": {
       "@/*": ["./src/*"],
+      "@/constant/*": ["./src/constant/*"],
       "@/controller/*": ["./src/controller/*"],
       "@/repository/*": ["./src/repository/*"],
       "@/router/*": ["./src/router/*"],
       "@/types/*": ["./src/types/*"],
       "@/usecase/*": ["./src/usecase/*"],
       "@/lib/*": ["./src/lib/*"],
-      "@/utils/*": ["./src/utils/*"],
+      "@/middleware/*": ["./src/middleware/*"],
+      "@/utils/*": ["./src/utils/*"]
     },
 
     // Stricter Typechecking Options

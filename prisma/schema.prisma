@@ -1,14 +1,167 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
-    provider = "prisma-client-js"
+  provider = "prisma-client-js"
 }
 
 datasource db {
-    provider = "postgresql"
-    url      = env("DATABASE_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String         @id @db.Uuid
+  studentId       String         @map("student_id")
+  username        String
+  nickname        String
+  firstname       String
+  lastname        String
+  role            RoleType
+  educationLevel  EducationLevel @map("education_level")
+  school          String
+  isResetUser     Boolean        @default(false) @map("is_reset_user")
+  termsAcceptedAt DateTime?      @map("terms_accepted_at") @db.Timestamptz()
+
+  // Relations
+  wallets Wallet       @relation(fields: [id], references: [user_id], onDelete: NoAction, onUpdate: NoAction, map: "users_id_fkey1")
+  answers UserAnswer[]
+
+  createdCodes         Code[]           @relation("CodeCreator")
+  codeRedemptions      CodeRedemption[] @relation("UserRedemptions")
+  sentTransactions     Transaction[]    @relation("TransactionSender")
+  receivedTransactions Transaction[]    @relation("TransactionRecipient")
+
+  updatedAt       DateTime         @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
+  createdAt       DateTime         @default(now()) @map("created_at") @db.Timestamptz()
+  ticketPurchases TicketPurchase[]
+
+  @@unique([id])
+  @@index([id, username])
+  @@map("users")
+}
+
+enum RoleType {
+  PARTICIPANT
+  STAFF
+  MODERATOR
+  ADMIN
+
+  @@map("role_type")
+}
+
+enum EducationLevel {
+  M4
+  M5
+  M6
+  Y1
+  Y2
+  Y3
+  Y4
+  GRADUATED
+}
+
+model Transaction {
+  id                Int             @id @default(autoincrement())
+  sender_user_id    String?         @db.Uuid
+  recipient_user_id String?         @db.Uuid
+  old_type          String?         @db.VarChar(50)
+  type              TransactionType @default(LEGACY_UNDEFINED) @map("type")
+  coin_amount       Int             @default(0)
+  related_code_id   Int?
+  created_at        DateTime?       @default(now()) @db.Timestamp(6)
+
+  // Relations
+  recipient   User? @relation("TransactionRecipient", fields: [recipient_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  relatedCode Code? @relation(fields: [related_code_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  sender      User? @relation("TransactionSender", fields: [sender_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@map("transactions")
+}
+
+enum TransactionType {
+  ADMIN_ADJUSTMENT
+  CODE_REDEMPTION
+  GIFT
+  PAYMENT
+  TICKET_PURCHASE
+  LEGACY_UNDEFINED
+
+  @@map("transaction_type")
+}
+
+model Wallet {
+  user_id              String    @id @db.Uuid
+  coin_balance         Int       @default(0)
+  cumulative_coin      Int       @default(0)
+  gift_sends           Int       @default(5)
+  last_gift_reset      DateTime? @map("last_gift_reset") @db.Timestamptz()
+  updated_at           DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
+  users                User?
+
+  @@index([coin_balance])
+  @@map("wallets")
+}
+
+model Code {
+  id                 Int       @id @default(autoincrement())
+  code_string        String    @unique @db.VarChar(50)
+  target_role        String    @default("junior") @db.VarChar(50)
+  activity_name      String    @db.VarChar(255)
+  reward_coin        Int       @default(0)
+  created_by_user_id String    @db.Uuid
+  expires_at         DateTime? @db.Timestamp(6)
+  created_at         DateTime? @default(now()) @db.Timestamp(6)
+
+  // Relations
+  redemptions  CodeRedemption[]
+  creator      User             @relation("CodeCreator", fields: [created_by_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  transactions Transaction[]
+
+  @@map("codes")
+}
+
+model CodeRedemption {
+  user_id     String    @db.Uuid
+  code_id     Int
+  redeemed_at DateTime? @default(now()) @db.Timestamp(6)
+
+  // Relations
+  code Code @relation(fields: [code_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  user User @relation("UserRedemptions", fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([user_id, code_id])
+  @@map("code_redemptions")
+}
+
+model UserAnswer {
+  userId     String   @map("user_id") @db.Uuid
+  questionId String   @map("question_id")
+  answer     String
+  answeredAt DateTime @default(now()) @map("answered_at") @db.Timestamptz()
+  user       User     @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([userId, questionId])
+  @@map("user_answers")
+}
+
+model SystemSetting {
+  setting_key   String    @id @db.VarChar(100)
+  setting_value String
+  description   String?
+  updated_at    DateTime @default(now()) @db.Timestamp(6) @updatedAt
+
+  @@map("system_settings")
+}
+
+model TicketPurchase {
+  id           String   @id @default(uuid()) @db.Uuid
+  event_name   String?  @db.VarChar(255)
+  count        Int
+  ticket_price Int
+  total_price  Int
+  purchase_at  DateTime @default(now()) @db.Timestamptz()
+  user_id      String   @db.Uuid
+
+  user User @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([purchase_at])
+  @@map("ticket_purchases")
 }

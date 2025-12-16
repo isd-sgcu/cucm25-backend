@@ -1,10 +1,24 @@
-import { Router } from "express"
-import mockRouter from "@/router/mock"
+import { Router } from 'express';
+import authRouter from '@/router/authRouter';
+import codeRouter from '@/router/code';
+import giftRouter from '@/router/giftRouter';
+import systemRouter from '@/router/system';
+import userRouter from '@/router/userRouter';
+import leaderboardRouter from '@/router/leaderboardRouter';
+import ticketRouter from '@/router/ticketRouter';
+import transactionRouter from '@/router/transactionRouter';
 
 export default function routerManager() {
-    const router = Router()
+  const router = Router();
 
-    router.use("/mock", mockRouter())
+  router.use('/auth', authRouter());
+  router.use('/code', codeRouter());
+  router.use('/system', systemRouter());
+  router.use('/user', userRouter());
+  router.use('/leaderboard', leaderboardRouter());
+  router.use('/ticket', ticketRouter());
+  router.use('/gift', giftRouter());
+  router.use('/transaction', transactionRouter());
 
-    return router
+  return router;
 }
