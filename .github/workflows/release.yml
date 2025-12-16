@@ -147,5 +147,5 @@ jobs:
     uses: ./.github/workflows/deploy.yml
     secrets: inherit
     with:
-      environment: if ${{ github.ref_name == 'main' }} then 'prod' else 'dev'
+      environment: ${{ github.ref_name == 'main' && 'prod' || 'dev' }}
       docker-image-sha-tag: ${{ needs.docker-build.outputs.digest }}
