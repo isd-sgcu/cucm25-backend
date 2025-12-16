@@ -9,6 +9,6 @@
       "message": "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
     }],
     [ "@semantic-release/github", { "assets": "CHANGELOG.md" } ],
-    [ "@semantic-release/exec", { "verifyReleaseCmd": "echo \"NEXT_RELEASE_VERSION=${nextRelease.version}\" >> $GITHUB_OUTPUT" } ]
+    [ "@semantic-release/exec", { "verifyReleaseCmd": "echo ${nextRelease.version} > .release-version" } ]
   ]
 }

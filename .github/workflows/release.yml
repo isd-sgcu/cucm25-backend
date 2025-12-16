@@ -1,11 +1,5 @@
 name: Release
 
-permissions:
-  contents: write
-  packages: write
-  issues: write
-  pull-requests: write
-
 on:
   push:
     branches:
@@ -34,7 +28,7 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        run: npm install
+        run: npm clean-install
 
       - name: Generate prisma client
         run: npx prisma generate
@@ -54,7 +48,7 @@ jobs:
       cancel-in-progress: true
 
     outputs:
-      RELEASE_VERSION: ${{ steps.semantic-release.outputs.NEXT_RELEASE_VERSION }}
+      RELEASE_VERSION: ${{ steps.version.outputs.version }}
 
     steps:
       - name: Get GitHub Token
@@ -76,16 +70,19 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        run: npm install
+        run: npm clean-install
 
       - name: Generate prisma client
         run: npx prisma generate
      
       - name: Create Release
-        id: semantic-release
         run: npx semantic-release
         env:
           GITHUB_TOKEN: ${{ steps.get-token.outputs.token }}
+
+      - name: Save Release Version
+        id: version
+        run: echo "version=$(cat .release-version)" >> $GITHUB_OUTPUT
 
   docker-build:
     name: Build and Push Docker Image
@@ -116,14 +113,16 @@ jobs:
         id: docker-meta
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/${{ github.repository}}
+          images: ghcr.io/${{ github.repository }}
           tags: |
-            type=semver,pattern={{raw}}
-            type=semver,pattern=v{{major}}
-            type=raw,value=latest
+            type=semver,pattern={{raw}},value=${{ needs.release.outputs.RELEASE_VERSION }}
+            type=semver,pattern=v{{major}}.{{minor}},value=${{ needs.release.outputs.RELEASE_VERSION }}
+            type=semver,pattern=v{{major}},value=${{ needs.release.outputs.RELEASE_VERSION }}
             type=raw,value=stable,enable=${{ github.ref_name == 'main' }}
             type=raw,value=dev,enable=${{ github.ref_name == 'dev' }}
-             
+            type=sha,prefix=,suffix=${{ github.actor }}
+            type=sha
+
       - name: Build and Push Docker Image
         uses: docker/build-push-action@v4
         with:
@@ -131,5 +130,6 @@ jobs:
           push: true
           tags: ${{ steps.docker-meta.outputs.tags }}
           labels: ${{ steps.docker-meta.outputs.labels }}
+          platforms: linux/amd64,linux/arm64
           cache-from: type=gha
           cache-to: type=gha,mode=max
