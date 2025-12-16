@@ -1,3 +1,10 @@
+# [1.0.0-dev.5](https://github.com/isd-sgcu/cucm25-backend/compare/v1.0.0-dev.4...v1.0.0-dev.5) (2025-12-16)
+
+
+### Bug Fixes
+
+* **release:** reconfig ([80d9251](https://github.com/isd-sgcu/cucm25-backend/commit/80d9251f6b36802c75db2de35a3e65843326d411))
+
 # [1.0.0-dev.4](https://github.com/isd-sgcu/cucm25-backend/compare/v1.0.0-dev.3...v1.0.0-dev.4) (2025-12-15)
 
 
