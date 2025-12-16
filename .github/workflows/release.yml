@@ -93,6 +93,9 @@ jobs:
       group: docker-${{ github.ref }}
       cancel-in-progress: true
 
+    outputs:
+      digest: ${{ steps.docker-build-and-push.outputs.digest }}
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
@@ -127,6 +130,7 @@ jobs:
 
       - name: Build and Push Docker Image
         uses: docker/build-push-action@v4
+        id: docker-build-and-push
         with:
           context: .
           push: true
@@ -134,3 +138,13 @@ jobs:
           labels: ${{ steps.docker-meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  deploy:
+    name: Deploy to Environments
+    needs: [release, docker-build]
+    if: ${{ github.ref_name == 'main' || github.ref_name == 'dev' }}
+
+    uses: ./.github/workflows/deploy.yml
+    with:
+      environment: if ${{ github.ref_name == 'main' }} then 'prod' else 'dev'
+      docker-image-sha-tag: ${{ needs.docker-build.outputs.digest }}

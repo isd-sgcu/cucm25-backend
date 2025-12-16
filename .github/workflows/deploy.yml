@@ -1,0 +1,86 @@
+name: Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment environment'
+        type: choice
+        required: true
+        default: dev
+        options:
+          - dev
+          - prod
+      docker-image-sha-tag:
+        description: 'Docker image SHA or tag to deploy'
+        required: true
+  workflow_call:
+    inputs:
+      environment:
+        required: true
+        type: string
+      docker-image-sha-tag:
+        required: true
+        type: string
+
+jobs:
+  deploy:
+    name: Deploy to ${{ inputs.environment || github.event.inputs.environment }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Get GitHub Token
+        id: get-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ vars.ISD_INFRA_APP_ID }}
+          private-key: ${{ secrets.ISD_INFRA_PRIVATE_KEY }}
+          repositories: cucm25-infra
+
+      - name: Checkout infra repo
+        uses: actions/checkout@v6
+        with:
+          repository: cucm25-infra
+          token: ${{ steps.get-token.outputs.token }}
+
+      - name: Resolve image (sha or tag)
+        run: |
+          IMAGE_INPUT="${{ inputs.docker-image-sha-tag }}"
+          IMAGE_NAME="ghcr.io/${{ github.repository }}"
+
+          if [[ -z "$IMAGE_INPUT" ]]; then
+            echo "Docker image tag or SHA is required"
+            exit 1
+          fi
+
+          if [[ "$IMAGE_INPUT" =~ ^sha256:[a-f0-9]{64}$ ]]; then
+            echo "Using SHA256 digest"
+            FULL_IMAGE="${IMAGE_NAME}@${IMAGE_INPUT}"
+          else
+            echo "Using tag"
+            FULL_IMAGE="${IMAGE_NAME}:${IMAGE_INPUT}"
+          fi
+
+          echo "FULL_IMAGE=$FULL_IMAGE" >> "$GITHUB_ENV"
+
+
+      - name: Update compose file with new image tag
+        run: |
+          sed -i 's|image: ghcr.io/${{ github.repository }}.*$|image: $FULL_IMAGE|' compose.${{ inputs.environment || github.event.inputs.environment }}.yml
+          
+      - name: Verify change
+        run: |
+          echo "Updated compose file:"
+          sed -n '/image:/p' compose.${{ inputs.environment || github.event.inputs.environment }}.yml
+
+      - name: Commit and Push changes
+        run: |
+          git config user.name "isd-infra[bot]"
+          git config user.email "isd-infra[bot]@users.noreply.github.com"
+          git add compose.${{ inputs.environment || github.event.inputs.environment }}.yml
+          git commit \
+          --author="${{ github.actor }} <${{ github.actor }}@users.noreply.github.com>" \
+          -m "chore: deploy ${{ inputs.environment || github.event.inputs.environment }} with image $FULL_IMAGE" || echo "No changes to commit"
+          git push origin HEAD:main
+        env:
+          FULL_IMAGE: ${{ env.FULL_IMAGE }}
