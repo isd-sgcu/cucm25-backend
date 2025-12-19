@@ -121,6 +121,22 @@ export class UserController {
       throw new AppError('Unauthorized', 401);
     }
 
+    if (!req.body || !Array.isArray(req.body.adjustments)) {
+      res.status(400).json({
+        success: false,
+        message: 'Invalid request body',
+      });
+      return;
+    }
+
+    if (req.body.adjustments.some((adj: any) => typeof adj.username !== 'string' || typeof adj.amount !== 'number')) {
+      res.status(400).json({
+        success: false,
+        message: 'Invalid adjustment format',
+      });
+      return;
+    }
+
     try {
       const { adjustments, adjustCumulative } = req.body;
       await this.userUsecase.bulkAdjustCoins(

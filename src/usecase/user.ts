@@ -99,9 +99,8 @@ export class UserUsecase {
       throw new AppError('Insufficient Permissions', 403);
     }
 
-    const adjustmentsWithIds: { userId: string; amount: number }[] = [];
-
-    await Promise.all(
+    const adjustmentsWithIds: { userId: string; amount: number }[] = 
+      await Promise.all(
       adjustments.map(async (adjustment) => {
         const { username, amount } = adjustment;
         const user = await this.userRepository.getUser({ username });
@@ -109,7 +108,7 @@ export class UserUsecase {
           throw new AppError(`User ${username} does not exist`, 404);
         }
 
-        adjustmentsWithIds.push({ userId: user.id, amount });
+        return { userId: user.id, amount };
       }),
     );
 
@@ -117,7 +116,7 @@ export class UserUsecase {
       adjustmentsWithIds,
       'ADMIN_ADJUSTMENT',
       adjustCumulative,
-    );
+    );    
   }
 
   private validateGetUserRequest(

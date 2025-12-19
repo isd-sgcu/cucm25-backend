@@ -91,33 +91,25 @@ export class WalletRepository {
   ): Promise<void> {
     await prisma.$transaction(async (tx) => {
       for (const adjustment of adjustments) {
-        console.log(adjustment);
-        const { userId, amount } = adjustment;
-        const user = await tx.user.findUnique({
-          where: { id: userId },
-        });
-        if (!user) {
-          throw new AppError(`User ${userId} does not exist`, 404);
-        }
         await tx.wallet.update({
-          where: { user_id: user.id },
+          where: { user_id: adjustment.userId },
           data: {
             coin_balance: {
-              increment: amount,
+              increment: adjustment.amount,
             },
-            cumulative_coin: adjustCumulative
+            ...(adjustCumulative
               ? {
-                  increment: amount,
+                  cumulative_coin: {
+                    increment: adjustment.amount,
+                  },
                 }
-              : {
-                increment: 0,
-              },
+              : {}),
           },
         });
         await tx.transaction.create({
           data: {
-            recipient_user_id: user.id,
-            coin_amount: amount,
+            recipient_user_id: adjustment.userId,
+            coin_amount: adjustment.amount,
             type: transactionType,
           },
         });

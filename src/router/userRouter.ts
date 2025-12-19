@@ -40,7 +40,7 @@ export default function userRouter() {
     '/adjust-coins',
     authMiddleware(),
     userController.bulkAdjustCoins.bind(userController),
-  )
+  );
 
   return router;
 }
