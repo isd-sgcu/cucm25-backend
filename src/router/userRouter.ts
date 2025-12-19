@@ -36,5 +36,11 @@ export default function userRouter() {
     userController.adjustCoins.bind(userController),
   );
 
+  router.put(
+    '/adjust-coins',
+    authMiddleware(),
+    userController.bulkAdjustCoins.bind(userController),
+  );
+
   return router;
 }
