@@ -115,4 +115,35 @@ export class UserController {
       }
     }
   }
+
+  async bulkAdjustCoins(req: AuthenticatedRequest, res: Response): Promise<void> {
+    if (!req.user) {
+      throw new AppError('Unauthorized', 401);
+    }
+
+    try {
+      const { adjustments, adjustCumulative } = req.body;
+      await this.userUsecase.bulkAdjustCoins(
+        req.user,
+        adjustments,
+        adjustCumulative,
+      );
+      res
+        .status(200)
+        .json({ success: true, message: 'Wallets adjusted successfully' });
+    } catch (error) {
+      if (error instanceof AppError) {
+        res.status(error.statusCode).json({
+          success: false,
+          message: error.message,
+        });
+      } else {
+        console.error('Bulk adjust wallets error:', error);
+        res.status(500).json({
+          success: false,
+          message: 'An unexpected error occurred',
+        });
+      }
+    }
+  }
 }

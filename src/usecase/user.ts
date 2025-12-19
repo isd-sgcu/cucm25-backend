@@ -90,6 +90,36 @@ export class UserUsecase {
     }
   }
 
+  async bulkAdjustCoins(
+    authUser: AuthUser,
+    adjustments: { username: string; amount: number }[],
+    adjustCumulative?: boolean,
+  ): Promise<void> {
+    if (authUser.role !== RoleType.ADMIN) {
+      throw new AppError('Insufficient Permissions', 403);
+    }
+
+    const adjustmentsWithIds: { userId: string; amount: number }[] = [];
+
+    await Promise.all(
+      adjustments.map(async (adjustment) => {
+        const { username, amount } = adjustment;
+        const user = await this.userRepository.getUser({ username });
+        if (!user) {
+          throw new AppError(`User ${username} does not exist`, 404);
+        }
+
+        adjustmentsWithIds.push({ userId: user.id, amount });
+      }),
+    );
+
+    await this.walletRepository.bulkAddCoins(
+      adjustmentsWithIds,
+      'ADMIN_ADJUSTMENT',
+      adjustCumulative,
+    );
+  }
+
   private validateGetUserRequest(
     authUser: AuthUser,
     params: GetRequestParams,
