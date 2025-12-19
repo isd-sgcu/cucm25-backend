@@ -83,4 +83,37 @@ export class WalletRepository {
       }),
     ]);
   }
+
+  async bulkAddCoins(
+    adjustments: { userId: string; amount: number }[],
+    transactionType: 'ADMIN_ADJUSTMENT',
+    adjustCumulative: boolean = true,
+  ): Promise<void> {
+    await prisma.$transaction(async (tx) => {
+      for (const adjustment of adjustments) {
+        await tx.wallet.update({
+          where: { user_id: adjustment.userId },
+          data: {
+            coin_balance: {
+              increment: adjustment.amount,
+            },
+            ...(adjustCumulative
+              ? {
+                  cumulative_coin: {
+                    increment: adjustment.amount,
+                  },
+                }
+              : {}),
+          },
+        });
+        await tx.transaction.create({
+          data: {
+            recipient_user_id: adjustment.userId,
+            coin_amount: adjustment.amount,
+            type: transactionType,
+          },
+        });
+      }
+    });
+  }
 }
